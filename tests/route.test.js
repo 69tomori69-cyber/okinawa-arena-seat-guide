@@ -20,6 +20,10 @@ for (const q of V.qrCodes) {
       const r = R.describe(V, g, q.node, b, seat, { avoidStairs });
       assert.ok(r, `${q.node} → ${b.id} のルートがありません`);
       assert.ok(r.steps.length > 0);
+      for (const s of r.steps) {
+        assert.ok(V.floors[s.floor], `${q.node} → ${b.id} の手順に階がありません: ${s.text}`);
+        assert.ok(Array.isArray(s.points) && s.points.length > 0, `${q.node} → ${b.id} の手順に位置がありません: ${s.text}`);
+      }
       if (avoidStairs) assert.ok(!r.steps.some(s => s.kind === "stairs"), `${q.node} → ${b.id} で階段を使っています`);
       count++;
     }

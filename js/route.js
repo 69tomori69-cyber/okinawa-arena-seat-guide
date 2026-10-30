@@ -118,7 +118,10 @@
         var how = leg.kind === "stairs" ? "階段" : "エレベーター";
         steps.push({
           kind: leg.kind,
-          text: how + "で" + floorText(venue, b.floor) + "へ" + (up ? "上がります" : "下ります") + "。"
+          text: how + "で" + floorText(venue, b.floor) + "へ" + (up ? "上がります" : "下ります") + "。",
+          floor: a.floor,
+          toFloor: b.floor,
+          points: [a.pos]
         });
         path.push(leg.to);
         i++;
@@ -129,11 +132,13 @@
         // コンコースを続けて歩く部分はひとまとめにする
         var runPx = 0;
         var first = leg;
+        var runPoints = [a.pos];
         var j = i;
         while (j < legs.length && legs[j].kind === "walk" && isRing(nodes[legs[j].from]) && isRing(nodes[legs[j].to])) {
           runPx += legs[j].len;
           if (nodes[legs[j].to].tentative) tentative = true;
           path.push(legs[j].to);
+          runPoints.push(nodes[legs[j].to].pos);
           j++;
         }
         var end = nodes[legs[j - 1].to];
@@ -142,7 +147,9 @@
         steps.push({
           kind: "walk",
           text: "コンコースを、客席側を" + (cw ? "右手" : "左手") + "に見ながら進み、「" + end.name + "」まで行きます。",
-          sub: "約" + meters(venue, runPx) + "m"
+          sub: "約" + meters(venue, runPx) + "m",
+          floor: a.floor,
+          points: runPoints
         });
         i = j;
         continue;
@@ -152,11 +159,11 @@
       totalPx += leg.len;
       path.push(leg.to);
       if (a.type === "gate") {
-        steps.push({ kind: "walk", text: a.name + "を背にして、" + floorText(venue, a.floor) + "に出ます。" });
+        steps.push({ kind: "walk", text: a.name + "を背にして、" + floorText(venue, a.floor) + "に出ます。", floor: a.floor, points: [a.pos, b.pos] });
       } else if (a.type === "core" && i === 0) {
-        steps.push({ kind: "walk", text: "「" + a.name.replace(/（.*）$/, "") + "」のそばから、" + floorText(venue, a.floor) + "に出ます。" });
+        steps.push({ kind: "walk", text: "「" + a.name.replace(/（.*）$/, "") + "」のそばから、" + floorText(venue, a.floor) + "に出ます。", floor: a.floor, points: [a.pos, b.pos] });
       } else if (b.type === "core") {
-        steps.push({ kind: "walk", text: "「" + b.name.replace(/（.*）$/, "") + "」へ向かいます。" });
+        steps.push({ kind: "walk", text: "「" + b.name.replace(/（.*）$/, "") + "」へ向かいます。", floor: b.floor, points: [a.pos, b.pos] });
       } else if (b.type === "gate") {
         // 最後のゲートへの一歩は下の「ゲートから座席へ」でまとめて案内する
       }
@@ -165,8 +172,9 @@
 
     var gate = nodes[block.gate];
     if (legs.length === 0) {
-      steps.push({ kind: "info", text: "いま「" + gate.name + "」のそばにいます。ここから入ります。" });
+      steps.push({ kind: "info", text: "いま「" + gate.name + "」のそばにいます。ここから入ります。", floor: gate.floor, points: [gate.pos] });
     }
+    var firstSeatStep = steps.length;
 
     // ゲートから座席まで
     var seatLabel = block.id + "ブロック" + (seat.row ? " " + seat.row + "列" : "") + (seat.number ? " " + seat.number + "番" : "");
@@ -202,6 +210,13 @@
       }
     }
     totalPx += dist(gate.pos, block.pos);
+
+    // ゲートから座席までの手順には、地図に描くための位置を付ける
+    var before = legs.length ? nodes[legs[legs.length - 1].from].pos : gate.pos;
+    for (var k = firstSeatStep; k < steps.length; k++) {
+      steps[k].floor = gate.floor;
+      steps[k].points = k === firstSeatStep ? [before, gate.pos, block.pos] : [gate.pos, block.pos];
+    }
 
     var totalMeters = meters(venue, totalPx);
     return {

@@ -15,8 +15,36 @@ window.VENUE = {
   courtCenter: [1000, 865],
 
   floors: {
-    L: { name: "下段コンコース", floorLabel: "2階", tentative: true },
-    U: { name: "上段コンコース", floorLabel: "4階", tentative: true }
+    // axo: 立体図（assets/floors）のどの階の絵に描くか
+    L: { name: "下段コンコース", floorLabel: "2階", axo: "2F", tentative: true },
+    U: { name: "上段コンコース", floorLabel: "4階", axo: "4F", tentative: true }
+  },
+
+  /*
+   * 立体図（各階を斜め上から見た絵）
+   * 座席図の位置 (x, y) を立体図の位置に変換する式：
+   *   横 = a*x + b*y + c,  縦 = d*x + e*y + f - lift
+   * a〜f はコートの四隅を座席図と立体図で合わせて求めた値。
+   * lift は床の高さの分だけ上にずらす量（2Fは廊下の壁が座席図と重なるように合わせた。3F・5Fは仮）。
+   * 4Fは遠近感の影響が大きく上の式では奥（北側）がずれるため、上段ゲートの位置を7か所合わせた
+   * 射影変換（homography：3×3の行列）を使う。
+   */
+  axo: {
+    width: 3000,
+    height: 2000,
+    matrix: [0.981, 0.48876, 84.61, -0.267, 0.64981, 717.35],
+    levels: {
+      "1F": { image: "assets/floors/1f.webp", lift: 0 },
+      "2F": { image: "assets/floors/2f.webp", lift: 120 },
+      "3F": { image: "assets/floors/3f.webp", lift: 220, tentative: true },
+      "4F": {
+        image: "assets/floors/4f.webp",
+        lift: 320,
+        homography: [0.55359355, 0.15003183, 475.55163789, -0.22536235, 0.46585333, 543.94815458, -0.00024137, 0.00007773, 1],
+        tentative: true
+      },
+      "5F": { image: "assets/floors/5f.webp", lift: 420, tentative: true }
+    }
   },
 
   /*
@@ -59,6 +87,9 @@ window.VENUE = {
     { id: "L-SS-E", name: "下段コンコース 南東", floor: "L", pos: [1440, 1490], type: "ring", tentative: true },
     { id: "L-SS-W", name: "下段コンコース 南西", floor: "L", pos: [648, 1490], type: "ring", tentative: true },
     { id: "L-SW", name: "下段コンコース 南西の角", floor: "L", pos: [303, 1150], type: "ring", tentative: true },
+    { id: "L-E", name: "下段コンコース 東", floor: "L", pos: [1793, 870], type: "ring", tentative: true },
+    // パノラマラウンジ：2Fの立体図で、座席図の500番台が黄色いラウンジの位置に重なるため下段の階に置いた
+    { id: "lounge", name: "パノラマラウンジ入口", floor: "L", pos: [1850, 870], type: "lounge", tentative: true },
     // 各ゲートの前（コンコース上）
     { id: "L-at-A21", name: "A21ゲート前", floor: "L", pos: [1645, 1374], type: "ring", tentative: true },
     { id: "L-at-B21", name: "B21ゲート前", floor: "L", pos: [1273, 1490], type: "ring", tentative: true },
@@ -71,27 +102,27 @@ window.VENUE = {
     { id: "L-at-F22", name: "F22ゲート前", floor: "L", pos: [1273, 247], type: "ring", tentative: true },
     { id: "L-at-G21", name: "G21ゲート前", floor: "L", pos: [1636, 437], type: "ring", tentative: true },
 
-    // ── 上段コンコース（仮）：上段スタンドの外側をまわる仮の通路
-    { id: "U-NW", name: "上段コンコース 北西の角", floor: "U", pos: [85, 500], type: "ring", tentative: true },
-    { id: "U-NN-W", name: "上段コンコース 北西", floor: "U", pos: [560, 22], type: "ring", tentative: true },
-    { id: "U-NN-E", name: "上段コンコース 北東", floor: "U", pos: [1530, 22], type: "ring", tentative: true },
-    { id: "U-NE", name: "上段コンコース 北東の角", floor: "U", pos: [1890, 430], type: "ring", tentative: true },
-    { id: "U-SE", name: "上段コンコース 南東の角", floor: "U", pos: [1890, 1300], type: "ring", tentative: true },
-    { id: "U-SS-E", name: "上段コンコース 南東", floor: "U", pos: [1530, 1722], type: "ring", tentative: true },
-    { id: "U-SS-W", name: "上段コンコース 南西", floor: "U", pos: [560, 1722], type: "ring", tentative: true },
-    { id: "U-SW", name: "上段コンコース 南西の角", floor: "U", pos: [85, 1230], type: "ring", tentative: true },
-    { id: "U-at-A41", name: "A41ゲート前", floor: "U", pos: [1645, 1587], type: "ring", tentative: true },
-    { id: "U-at-B41", name: "B41ゲート前", floor: "U", pos: [1285, 1722], type: "ring", tentative: true },
-    { id: "U-at-B42", name: "B42ゲート前", floor: "U", pos: [815, 1722], type: "ring", tentative: true },
-    { id: "U-at-C41", name: "C41ゲート前", floor: "U", pos: [442, 1600], type: "ring", tentative: true },
-    { id: "U-at-C42", name: "C42ゲート前", floor: "U", pos: [182, 1330], type: "ring", tentative: true },
-    { id: "U-at-D41", name: "D41ゲート前", floor: "U", pos: [85, 870], type: "ring", tentative: true },
-    { id: "U-at-E41", name: "E41ゲート前", floor: "U", pos: [180, 405], type: "ring", tentative: true },
-    { id: "U-at-E42", name: "E42ゲート前", floor: "U", pos: [446, 137], type: "ring", tentative: true },
-    { id: "U-at-F41", name: "F41ゲート前", floor: "U", pos: [810, 22], type: "ring", tentative: true },
-    { id: "U-at-F42", name: "F42ゲート前", floor: "U", pos: [1285, 22], type: "ring", tentative: true },
-    { id: "U-at-G41", name: "G41ゲート前", floor: "U", pos: [1634, 139], type: "ring", tentative: true },
-    { id: "U-lounge", name: "パノラマラウンジ入口", floor: "U", pos: [1890, 870], type: "lounge", tentative: true },
+    // ── 上段コンコース（仮）：上段ゲートの並び（4列と5列の間の横通路の高さ）に沿わせた仮の通路。
+    //    4Fの立体図では、上段スタンドの外側は建物の外になるため
+    { id: "U-NW", name: "上段コンコース 北西の角", floor: "U", pos: [195, 560], type: "ring", tentative: true },
+    { id: "U-NN-W", name: "上段コンコース 北西", floor: "U", pos: [640, 140], type: "ring", tentative: true },
+    { id: "U-NN-E", name: "上段コンコース 北東", floor: "U", pos: [1450, 140], type: "ring", tentative: true },
+    { id: "U-NE", name: "上段コンコース 北東の角", floor: "U", pos: [1700, 420], type: "ring", tentative: true },
+    { id: "U-SE", name: "上段コンコース 南東の角", floor: "U", pos: [1700, 1300], type: "ring", tentative: true },
+    { id: "U-SS-E", name: "上段コンコース 南東", floor: "U", pos: [1450, 1590], type: "ring", tentative: true },
+    { id: "U-SS-W", name: "上段コンコース 南西", floor: "U", pos: [640, 1590], type: "ring", tentative: true },
+    { id: "U-SW", name: "上段コンコース 南西の角", floor: "U", pos: [195, 1180], type: "ring", tentative: true },
+    { id: "U-at-A41", name: "A41ゲート前", floor: "U", pos: [1560, 1515], type: "ring", tentative: true },
+    { id: "U-at-B41", name: "B41ゲート前", floor: "U", pos: [1285, 1590], type: "ring", tentative: true },
+    { id: "U-at-B42", name: "B42ゲート前", floor: "U", pos: [815, 1590], type: "ring", tentative: true },
+    { id: "U-at-C41", name: "C41ゲート前", floor: "U", pos: [520, 1525], type: "ring", tentative: true },
+    { id: "U-at-C42", name: "C42ゲート前", floor: "U", pos: [255, 1260], type: "ring", tentative: true },
+    { id: "U-at-D41", name: "D41ゲート前", floor: "U", pos: [195, 870], type: "ring", tentative: true },
+    { id: "U-at-E41", name: "E41ゲート前", floor: "U", pos: [255, 480], type: "ring", tentative: true },
+    { id: "U-at-E42", name: "E42ゲート前", floor: "U", pos: [525, 215], type: "ring", tentative: true },
+    { id: "U-at-F41", name: "F41ゲート前", floor: "U", pos: [810, 140], type: "ring", tentative: true },
+    { id: "U-at-F42", name: "F42ゲート前", floor: "U", pos: [1285, 140], type: "ring", tentative: true },
+    { id: "U-at-G41", name: "G41ゲート前", floor: "U", pos: [1565, 200], type: "ring", tentative: true },
 
     // ── 階段・エレベーター（仮）：座席図の四隅にある紺色の四角を階段・EVと仮定
     { id: "core-NW-L", name: "北西の階段（下段側）", floor: "L", pos: [282, 400], type: "core", tentative: true },
@@ -113,7 +144,7 @@ window.VENUE = {
     // 下段コンコース一周（仮）
     ["L-NN-W", "L-at-F21", "walk"], ["L-at-F21", "L-at-F22", "walk"], ["L-at-F22", "L-NN-E", "walk"],
     ["L-NN-E", "L-at-G21", "walk"], ["L-at-G21", "L-NE", "walk"],
-    ["L-NE", "L-SE", "walk"],
+    ["L-NE", "L-E", "walk"], ["L-E", "L-SE", "walk"], ["L-E", "lounge", "walk"],
     ["L-SE", "L-at-A21", "walk"], ["L-at-A21", "L-SS-E", "walk"],
     ["L-SS-E", "L-at-B21", "walk"], ["L-at-B21", "L-at-B22", "walk"], ["L-at-B22", "L-SS-W", "walk"],
     ["L-SS-W", "L-at-C21", "walk"], ["L-at-C21", "L-SW", "walk"],
@@ -128,7 +159,7 @@ window.VENUE = {
     // 上段コンコース一周（仮）
     ["U-NN-W", "U-at-F41", "walk"], ["U-at-F41", "U-at-F42", "walk"], ["U-at-F42", "U-NN-E", "walk"],
     ["U-NN-E", "U-at-G41", "walk"], ["U-at-G41", "U-NE", "walk"],
-    ["U-NE", "U-lounge", "walk"], ["U-lounge", "U-SE", "walk"],
+    ["U-NE", "U-SE", "walk"],
     ["U-SE", "U-at-A41", "walk"], ["U-at-A41", "U-SS-E", "walk"],
     ["U-SS-E", "U-at-B41", "walk"], ["U-at-B41", "U-at-B42", "walk"], ["U-at-B42", "U-SS-W", "walk"],
     ["U-SS-W", "U-at-C41", "walk"], ["U-at-C41", "U-at-C42", "walk"], ["U-at-C42", "U-SW", "walk"],
@@ -268,22 +299,22 @@ window.VENUE = {
     { id: "433", group: "upper", gate: "gate-G41", rows: [1, 11], aisleAfterRow: 4, pos: [1550, 280] },
     { id: "433ST", group: "upper", gate: "gate-G41", rows: [1, 11], aisleAfterRow: 4, pos: [1610, 150] },
 
-    // ── パノラマラウンジ：入り方は確認中。ラウンジ入口（仮）まで案内します
-    { id: "500", group: "lounge", gate: "U-lounge", rows: null, pos: [1680, 315], tentative: true },
-    { id: "501", group: "lounge", gate: "U-lounge", rows: null, pos: [1790, 435], tentative: true },
-    { id: "502", group: "lounge", gate: "U-lounge", rows: null, pos: [1840, 475], tentative: true },
-    { id: "503", group: "lounge", gate: "U-lounge", rows: null, pos: [1890, 520], tentative: true },
-    { id: "504", group: "lounge", gate: "U-lounge", rows: null, pos: [1910, 605], tentative: true },
-    { id: "505", group: "lounge", gate: "U-lounge", rows: null, pos: [1910, 697], tentative: true },
-    { id: "506", group: "lounge", gate: "U-lounge", rows: null, pos: [1910, 785], tentative: true },
-    { id: "507", group: "lounge", gate: "U-lounge", rows: null, pos: [1910, 870], tentative: true },
-    { id: "508", group: "lounge", gate: "U-lounge", rows: null, pos: [1910, 955], tentative: true },
-    { id: "509", group: "lounge", gate: "U-lounge", rows: null, pos: [1910, 1043], tentative: true },
-    { id: "510", group: "lounge", gate: "U-lounge", rows: null, pos: [1910, 1132], tentative: true },
-    { id: "511", group: "lounge", gate: "U-lounge", rows: null, pos: [1885, 1212], tentative: true },
-    { id: "512", group: "lounge", gate: "U-lounge", rows: null, pos: [1835, 1262], tentative: true },
-    { id: "513", group: "lounge", gate: "U-lounge", rows: null, pos: [1785, 1305], tentative: true },
-    { id: "514", group: "lounge", gate: "U-lounge", rows: null, pos: [1678, 1413], tentative: true }
+    // ── パノラマラウンジ：入り方は確認中。下段コンコース東側のラウンジ入口（仮）まで案内します
+    { id: "500", group: "lounge", gate: "lounge", rows: null, pos: [1680, 315], tentative: true },
+    { id: "501", group: "lounge", gate: "lounge", rows: null, pos: [1790, 435], tentative: true },
+    { id: "502", group: "lounge", gate: "lounge", rows: null, pos: [1840, 475], tentative: true },
+    { id: "503", group: "lounge", gate: "lounge", rows: null, pos: [1890, 520], tentative: true },
+    { id: "504", group: "lounge", gate: "lounge", rows: null, pos: [1910, 605], tentative: true },
+    { id: "505", group: "lounge", gate: "lounge", rows: null, pos: [1910, 697], tentative: true },
+    { id: "506", group: "lounge", gate: "lounge", rows: null, pos: [1910, 785], tentative: true },
+    { id: "507", group: "lounge", gate: "lounge", rows: null, pos: [1910, 870], tentative: true },
+    { id: "508", group: "lounge", gate: "lounge", rows: null, pos: [1910, 955], tentative: true },
+    { id: "509", group: "lounge", gate: "lounge", rows: null, pos: [1910, 1043], tentative: true },
+    { id: "510", group: "lounge", gate: "lounge", rows: null, pos: [1910, 1132], tentative: true },
+    { id: "511", group: "lounge", gate: "lounge", rows: null, pos: [1885, 1212], tentative: true },
+    { id: "512", group: "lounge", gate: "lounge", rows: null, pos: [1835, 1262], tentative: true },
+    { id: "513", group: "lounge", gate: "lounge", rows: null, pos: [1785, 1305], tentative: true },
+    { id: "514", group: "lounge", gate: "lounge", rows: null, pos: [1678, 1413], tentative: true }
   ],
 
   // 座席番号（番）の入力で受け付ける最大値（仮）。実際の番号の範囲は座席図から読み切れていません。
@@ -324,6 +355,6 @@ window.VENUE = {
     { id: "qr-027", node: "core-NE-U", place: "北東の階段・EV 上段側の乗り口", tentative: true },
     { id: "qr-028", node: "core-SW-U", place: "南西の階段・EV 上段側の乗り口", tentative: true },
     { id: "qr-029", node: "core-SE-U", place: "南東の階段 上段側の乗り口", tentative: true },
-    { id: "qr-030", node: "U-lounge", place: "パノラマラウンジ入口", tentative: true }
+    { id: "qr-030", node: "lounge", place: "パノラマラウンジ入口", tentative: true }
   ]
 };

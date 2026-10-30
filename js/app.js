@@ -134,7 +134,7 @@
   // ───────── 座席図（拡大・移動）
 
   var view = { x: 0, y: 0, w: V.mapWidth, h: V.mapHeight };
-  var layer = { route: null, pins: null };
+  var layer = { gates: null, route: null, pins: null };
 
   function el(name, attrs, parent) {
     var e = document.createElementNS(SVG_NS, name);
@@ -189,20 +189,26 @@
   function setupMap() {
     els.map.setAttribute("preserveAspectRatio", "xMidYMid meet");
     el("image", { href: V.mapImage, x: 0, y: 0, width: V.mapWidth, height: V.mapHeight }, els.map);
+    layer.gates = el("g", {}, els.map);
     layer.route = el("g", {}, els.map);
     layer.pins = el("g", {}, els.map);
+    drawGates();
     applyView();
 
     // ドラッグで移動、2本指で拡大縮小
     var pointers = {};
     var last = null;
+    var tap = null;
     els.map.addEventListener("pointerdown", function (e) {
       els.map.setPointerCapture(e.pointerId);
       pointers[e.pointerId] = [e.clientX, e.clientY];
+      // 指をほとんど動かさずに離したら「タップ」とみなす
+      tap = Object.keys(pointers).length === 1 ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null;
       els.map.classList.add("dragging");
     });
     els.map.addEventListener("pointermove", function (e) {
       if (!pointers[e.pointerId]) return;
+      if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap = null;
       var ids = Object.keys(pointers);
       var r = els.map.getBoundingClientRect();
       if (ids.length === 1) {
@@ -224,6 +230,8 @@
       }
     });
     function end(e) {
+      if (e.type === "pointerup" && tap && tap.id === e.pointerId) onMapTap(e.clientX, e.clientY);
+      tap = null;
       delete pointers[e.pointerId];
       if (Object.keys(pointers).length < 2) last = null;
       if (!Object.keys(pointers).length) els.map.classList.remove("dragging");
@@ -243,6 +251,47 @@
 
   var lastFitPoints = [];
 
+  // 入口（ゲート）の赤い印
+  function drawGates() {
+    V.nodes.filter(function (n) { return n.type === "gate"; }).forEach(function (n) {
+      el("circle", { "class": "gate-mark", cx: n.pos[0], cy: n.pos[1], r: 13 }, layer.gates);
+    });
+  }
+
+  // 座席図のブロックをタップすると、そのブロックを選ぶ
+  function onMapTap(clientX, clientY) {
+    var p = svgPoint(clientX, clientY);
+    var r = els.map.getBoundingClientRect();
+    var tolerance = Math.max(40, (30 * view.w) / r.width);
+    var best = null, bestD = Infinity;
+    V.blocks.forEach(function (b) {
+      var d = R.dist(p, b.pos);
+      if (d < bestD) { best = b; bestD = d; }
+    });
+    if (!best || bestD > tolerance) return;
+    els.block.value = best.id;
+    fillRows();
+    previewBlock(best, true);
+    setHint(best.id + "ブロックを選びました。" + (best.rows ? "列と番を入れて「ルートを表示」を押してください。" : "「ルートを表示」を押してください。"));
+  }
+
+  var defaultHint = null;
+  function setHint(text) {
+    var hint = document.querySelector(".map-hint");
+    if (defaultHint === null) defaultHint = hint.textContent;
+    hint.textContent = text || defaultHint;
+  }
+
+  // ルートを出す前に、選んだブロックを座席図の上で光らせる
+  function previewBlock(block, keepZoom) {
+    clearOverlay();
+    if (currentFrom) drawHere(graph.nodes[currentFrom].pos);
+    drawSeat(block.pos, block.id);
+    lastFitPoints = [block.pos];
+    if (!keepZoom) fitTo([block.pos], 250);
+    els.result.hidden = true;
+  }
+
   function drawLabel(parent, pos, text, below) {
     var g = el("g", { "class": "pin-label" }, parent);
     var w = text.length * 30 + 24;
@@ -260,6 +309,7 @@
   }
 
   function drawSeat(pos, label) {
+    el("circle", { "class": "seat-glow", cx: pos[0], cy: pos[1], r: 70 }, layer.pins);
     var g = el("g", { "class": "pin-seat", transform: "translate(" + pos[0] + "," + pos[1] + ")" }, layer.pins);
     el("path", { d: "M0 0 C -10 -22 -30 -32 -30 -52 A 30 30 0 1 1 30 -52 C 30 -32 10 -22 0 0 Z" }, g);
     el("circle", { cx: 0, cy: -52, r: 10, fill: "#fff" }, g);
@@ -343,7 +393,9 @@
     }
     drawRoute(r, f.block);
     showResult(r);
-    if (scroll) els.map.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.AxoView.render(r, f.block);
+    setHint("");
+    if (scroll) els.result.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   // ───────── はじめに
@@ -364,7 +416,11 @@
     fillRows();
   }
 
-  els.block.addEventListener("change", fillRows);
+  els.block.addEventListener("change", function () {
+    fillRows();
+    var b = blocksById[els.block.value];
+    if (b) { previewBlock(b, false); setHint(""); }
+  });
   els.form.addEventListener("submit", function (e) { e.preventDefault(); route(true); });
   els.fromSelect.addEventListener("change", function () {
     currentFrom = els.fromSelect.value || null;
@@ -380,3 +436,10 @@
   if (currentFrom && saved && blocksById[saved.block]) route(false);
   else drawHereOnly();
 })();
+
+// ホーム画面に追加したとき、電波が弱くても開けるようにする
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () { /* 使えなくても案内は動く */ });
+  });
+}

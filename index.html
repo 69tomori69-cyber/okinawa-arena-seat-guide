@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#14284b">
   <title>座席案内 | 沖縄サントリーアリーナ</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="座席案内">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -63,13 +68,31 @@
           <button type="button" id="zoom-fit" aria-label="ルート全体を表示">全体</button>
         </div>
       </div>
-      <p class="map-hint">2本指で拡大・縮小、ドラッグで移動できます。</p>
+      <p class="map-hint">ブロックをタップすると選べます。2本指で拡大・縮小、ドラッグで移動できます。赤い丸は入口（ゲート）です。</p>
     </section>
 
     <section class="card" id="result" hidden aria-labelledby="result-title">
       <h2 id="result-title">座席までの道順</h2>
       <p id="result-summary" class="summary"></p>
+
+      <div id="axo-card" class="axo-card" hidden>
+        <div class="axo-head">
+          <span id="axo-floor" class="floor-badge">2F</span>
+          <span id="axo-caption" class="axo-caption" aria-live="polite"></span>
+        </div>
+        <div class="axo-wrap">
+          <svg id="axo" role="img" aria-label="立体図と道順" preserveAspectRatio="xMidYMid meet"></svg>
+          <div id="floor-rail" class="floor-rail" aria-hidden="true"></div>
+        </div>
+        <div class="axo-nav">
+          <button type="button" id="step-prev">◀ 前へ</button>
+          <span id="step-count" class="step-count"></span>
+          <button type="button" id="step-next">次へ ▶</button>
+        </div>
+      </div>
+
       <ol id="steps" class="steps"></ol>
+      <p class="note">手順をタップすると、立体図でその場所を表示します。</p>
       <p id="result-note" class="note"></p>
       <p class="note">迷ったときは、近くの柱などに貼られたQRコードを読むと、現在地を更新できます（座席番号は覚えています）。</p>
     </section>
@@ -77,10 +100,19 @@
 
   <footer class="site-footer">
     <p>入力した座席番号はこのスマホの中だけに保存されます。個人情報は集めていません。</p>
+    <details class="install">
+      <summary>ホーム画面に追加すると、アプリのように使えます</summary>
+      <ul>
+        <li>iPhone：Safariの共有ボタン → 「ホーム画面に追加」</li>
+        <li>Android：Chromeのメニュー（︙） → 「ホーム画面に追加」または「アプリをインストール」</li>
+      </ul>
+      <p>一度開いておけば、館内で電波が弱くても案内を表示できます。</p>
+    </details>
   </footer>
 
   <script src="data/venue-data.js"></script>
   <script src="js/route.js"></script>
+  <script src="js/axo-view.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
