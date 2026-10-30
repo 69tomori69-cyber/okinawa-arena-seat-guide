@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QRコード一覧（運営者用）</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; margin: 16px; color: #1c2233; background: #fff; }
+    h1 { font-size: 1.3rem; margin: 0 0 8px; }
+    .warn { background: #fff4d6; color: #6b4e00; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; }
+    .base { margin: 12px 0; font-size: 0.9rem; }
+    .base input { width: 100%; max-width: 520px; padding: 6px; font-size: 0.9rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .qr { border: 1px solid #d7dce6; border-radius: 8px; padding: 12px; text-align: center; break-inside: avoid; }
+    .qr .title { font-weight: bold; font-size: 1.1rem; }
+    .qr .here { font-size: 0.95rem; }
+    .qr img { width: 160px; height: 160px; image-rendering: pixelated; margin: 6px 0; }
+    .qr .meta { font-size: 0.72rem; color: #5b6477; word-break: break-all; }
+    .tentative { color: #a15c00; font-size: 0.75rem; }
+    @media print { .no-print { display: none; } body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <h1>QRコード一覧（運営者用）</h1>
+    <p class="warn">テスト用です。公開先のURLと設置場所が決まるまで、本番用に印刷しないでください（QRのURLは貼った後で変えられません）。</p>
+    <div class="base">
+      <label for="base">案内ページのURL（公開先が決まったら書き換えて印刷）</label><br>
+      <input id="base" type="url">
+    </div>
+    <p><button onclick="window.print()">印刷する</button></p>
+  </div>
+  <div id="grid" class="grid"></div>
+
+  <script src="data/venue-data.js"></script>
+  <script src="js/vendor/qrcode.js"></script>
+  <script>
+    (function () {
+      var V = window.VENUE;
+      var nodes = {};
+      V.nodes.forEach(function (n) { nodes[n.id] = n; });
+      var input = document.getElementById("base");
+      input.value = new URL("./", location.href).href;
+
+      function render() {
+        var grid = document.getElementById("grid");
+        grid.innerHTML = "";
+        V.qrCodes.forEach(function (q) {
+          var url = input.value + "?from=" + encodeURIComponent(q.node);
+          var qr = qrcode(0, "M");
+          qr.addData(url);
+          qr.make();
+          var box = document.createElement("div");
+          box.className = "qr";
+          var name = nodes[q.node].name.replace(/（.*）$/, "");
+          box.innerHTML =
+            '<div class="title">座席案内はこちら</div>' +
+            '<div class="here">現在地：' + name + '</div>' +
+            qr.createImgTag(4, 8) +
+            '<div class="meta">' + q.id + "／" + q.place + "<br>" + url + "</div>" +
+            (q.tentative ? '<div class="tentative">設置場所は仮</div>' : "");
+          grid.appendChild(box);
+        });
+      }
+      input.addEventListener("change", render);
+      render();
+    })();
+  </script>
+</body>
+</html>
