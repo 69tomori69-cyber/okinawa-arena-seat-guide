@@ -1,5 +1,5 @@
 /*
- * 画面の動き：現在地の表示、座席番号の入力、座席図の上へのルート表示
+ * 画面の動き：現在地の表示、座席番号の入力、立体図の上へのルート表示
  */
 (function () {
   "use strict";
@@ -7,7 +7,6 @@
   var V = window.VENUE;
   var R = window.SeatRoute;
   var graph = R.buildGraph(V);
-  var SVG_NS = "http://www.w3.org/2000/svg";
   var STORAGE_KEY = "seat-guide:last-seat";
 
   var $ = function (id) { return document.getElementById(id); };
@@ -20,9 +19,7 @@
     rowField: $("row-field"),
     row: $("row-select"),
     seat: $("seat-input"),
-    avoid: $("avoid-stairs"),
     error: $("form-error"),
-    map: $("map"),
     result: $("result"),
     summary: $("result-summary"),
     steps: $("steps"),
@@ -131,225 +128,26 @@
     return { block: b, seat: { row: row, number: num } };
   }
 
-  // ───────── 座席図（拡大・移動）
+  // ───────── 立体図での表示
 
-  var view = { x: 0, y: 0, w: V.mapWidth, h: V.mapHeight };
-  var layer = { gates: null, route: null, pins: null };
+  var Axo = window.AxoView;
 
-  function el(name, attrs, parent) {
-    var e = document.createElementNS(SVG_NS, name);
-    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
-    if (parent) parent.appendChild(e);
-    return e;
+  function showHere() {
+    Axo.showHere(currentFrom);
   }
 
-  function applyView() {
-    els.map.setAttribute("viewBox", [view.x, view.y, view.w, view.h].join(" "));
-  }
-
-  function clampView() {
-    var minW = V.mapWidth / 8;
-    var maxW = V.mapWidth;
-    if (view.w < minW) { view.h *= minW / view.w; view.w = minW; }
-    if (view.w > maxW) { view.h *= maxW / view.w; view.w = maxW; }
-    view.x = Math.min(Math.max(view.x, -view.w * 0.3), V.mapWidth - view.w * 0.7);
-    view.y = Math.min(Math.max(view.y, -view.h * 0.3), V.mapHeight - view.h * 0.7);
-  }
-
-  function zoomAt(factor, cx, cy) {
-    var nw = view.w / factor;
-    var nh = view.h / factor;
-    view.x = cx - (cx - view.x) * (nw / view.w);
-    view.y = cy - (cy - view.y) * (nh / view.h);
-    view.w = nw;
-    view.h = nh;
-    clampView();
-    applyView();
-  }
-
-  function fitTo(points, pad) {
-    if (!points.length) { view = { x: 0, y: 0, w: V.mapWidth, h: V.mapHeight }; applyView(); return; }
-    var xs = points.map(function (p) { return p[0]; });
-    var ys = points.map(function (p) { return p[1]; });
-    var x0 = Math.min.apply(null, xs) - pad, x1 = Math.max.apply(null, xs) + pad;
-    var y0 = Math.min.apply(null, ys) - pad, y1 = Math.max.apply(null, ys) + pad;
-    var ratio = V.mapWidth / V.mapHeight;
-    var w = Math.max(x1 - x0, (y1 - y0) * ratio, V.mapWidth / 4);
-    var h = w / ratio;
-    view = { x: (x0 + x1) / 2 - w / 2, y: (y0 + y1) / 2 - h / 2, w: w, h: h };
-    clampView();
-    applyView();
-  }
-
-  function svgPoint(clientX, clientY) {
-    var r = els.map.getBoundingClientRect();
-    return [view.x + ((clientX - r.left) / r.width) * view.w, view.y + ((clientY - r.top) / r.height) * view.h];
-  }
-
-  function setupMap() {
-    els.map.setAttribute("preserveAspectRatio", "xMidYMid meet");
-    el("image", { href: V.mapImage, x: 0, y: 0, width: V.mapWidth, height: V.mapHeight }, els.map);
-    layer.gates = el("g", {}, els.map);
-    layer.route = el("g", {}, els.map);
-    layer.pins = el("g", {}, els.map);
-    drawGates();
-    applyView();
-
-    // ドラッグで移動、2本指で拡大縮小
-    var pointers = {};
-    var last = null;
-    var tap = null;
-    els.map.addEventListener("pointerdown", function (e) {
-      els.map.setPointerCapture(e.pointerId);
-      pointers[e.pointerId] = [e.clientX, e.clientY];
-      // 指をほとんど動かさずに離したら「タップ」とみなす
-      tap = Object.keys(pointers).length === 1 ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null;
-      els.map.classList.add("dragging");
-    });
-    els.map.addEventListener("pointermove", function (e) {
-      if (!pointers[e.pointerId]) return;
-      if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 8) tap = null;
-      var ids = Object.keys(pointers);
-      var r = els.map.getBoundingClientRect();
-      if (ids.length === 1) {
-        var p = pointers[e.pointerId];
-        view.x -= ((e.clientX - p[0]) / r.width) * view.w;
-        view.y -= ((e.clientY - p[1]) / r.height) * view.h;
-        clampView();
-        applyView();
-      }
-      pointers[e.pointerId] = [e.clientX, e.clientY];
-      if (ids.length === 2) {
-        var a = pointers[ids[0]], b = pointers[ids[1]];
-        var d = Math.hypot(a[0] - b[0], a[1] - b[1]);
-        if (last) {
-          var c = svgPoint((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
-          zoomAt(d / last, c[0], c[1]);
-        }
-        last = d;
-      }
-    });
-    function end(e) {
-      if (e.type === "pointerup" && tap && tap.id === e.pointerId) onMapTap(e.clientX, e.clientY);
-      tap = null;
-      delete pointers[e.pointerId];
-      if (Object.keys(pointers).length < 2) last = null;
-      if (!Object.keys(pointers).length) els.map.classList.remove("dragging");
-    }
-    els.map.addEventListener("pointerup", end);
-    els.map.addEventListener("pointercancel", end);
-    els.map.addEventListener("wheel", function (e) {
-      e.preventDefault();
-      var c = svgPoint(e.clientX, e.clientY);
-      zoomAt(e.deltaY < 0 ? 1.2 : 1 / 1.2, c[0], c[1]);
-    }, { passive: false });
-
-    $("zoom-in").addEventListener("click", function () { zoomAt(1.4, view.x + view.w / 2, view.y + view.h / 2); });
-    $("zoom-out").addEventListener("click", function () { zoomAt(1 / 1.4, view.x + view.w / 2, view.y + view.h / 2); });
-    $("zoom-fit").addEventListener("click", function () { fitTo(lastFitPoints, 120); });
-  }
-
-  var lastFitPoints = [];
-
-  // 入口（ゲート）の赤い印
-  function drawGates() {
-    V.nodes.filter(function (n) { return n.type === "gate"; }).forEach(function (n) {
-      el("circle", { "class": "gate-mark", cx: n.pos[0], cy: n.pos[1], r: 13 }, layer.gates);
-    });
-  }
-
-  // 座席図のブロックをタップすると、そのブロックを選ぶ
-  function onMapTap(clientX, clientY) {
-    var p = svgPoint(clientX, clientY);
-    var r = els.map.getBoundingClientRect();
-    var tolerance = Math.max(40, (30 * view.w) / r.width);
-    var best = null, bestD = Infinity;
-    V.blocks.forEach(function (b) {
-      var d = R.dist(p, b.pos);
-      if (d < bestD) { best = b; bestD = d; }
-    });
-    if (!best || bestD > tolerance) return;
-    els.block.value = best.id;
-    fillRows();
-    previewBlock(best, true);
-    setHint(best.id + "ブロックを選びました。" + (best.rows ? "列と番を入れて「ルートを表示」を押してください。" : "「ルートを表示」を押してください。"));
-  }
-
-  var defaultHint = null;
-  function setHint(text) {
-    var hint = document.querySelector(".map-hint");
-    if (defaultHint === null) defaultHint = hint.textContent;
-    hint.textContent = text || defaultHint;
-  }
-
-  // ルートを出す前に、選んだブロックを座席図の上で光らせる
-  function previewBlock(block, keepZoom) {
-    clearOverlay();
-    if (currentFrom) drawHere(graph.nodes[currentFrom].pos);
-    drawSeat(block.pos, block.id);
-    lastFitPoints = [block.pos];
-    if (!keepZoom) fitTo([block.pos], 250);
+  // ルートを出す前に、選んだブロックを立体図の上で光らせる
+  function previewBlock(block) {
     els.result.hidden = true;
+    Axo.preview(block, currentFrom);
   }
 
-  function drawLabel(parent, pos, text, below) {
-    var g = el("g", { "class": "pin-label" }, parent);
-    var w = text.length * 30 + 24;
-    var y = below ? pos[1] + 40 : pos[1] - 88;
-    el("rect", { x: pos[0] - w / 2, y: y, width: w, height: 46, rx: 10 }, g);
-    var t = el("text", { x: pos[0], y: y + 33, "text-anchor": "middle" }, g);
-    t.textContent = text;
-  }
-
-  function drawHere(pos) {
-    var g = el("g", { "class": "pin-here" }, layer.pins);
-    el("circle", { "class": "pulse", cx: pos[0], cy: pos[1], r: 48 }, g);
-    el("circle", { cx: pos[0], cy: pos[1], r: 20 }, g);
-    drawLabel(layer.pins, pos, "現在地", false);
-  }
-
-  function drawSeat(pos, label) {
-    el("circle", { "class": "seat-glow", cx: pos[0], cy: pos[1], r: 70 }, layer.pins);
-    var g = el("g", { "class": "pin-seat", transform: "translate(" + pos[0] + "," + pos[1] + ")" }, layer.pins);
-    el("path", { d: "M0 0 C -10 -22 -30 -32 -30 -52 A 30 30 0 1 1 30 -52 C 30 -32 10 -22 0 0 Z" }, g);
-    el("circle", { cx: 0, cy: -52, r: 10, fill: "#fff" }, g);
-    drawLabel(layer.pins, pos, label, true);
-  }
-
-  function clearOverlay() {
-    layer.route.innerHTML = "";
-    layer.pins.innerHTML = "";
-  }
-
-  function drawRoute(result, block) {
-    clearOverlay();
-    var pts = result.path.map(function (id) { return graph.nodes[id].pos; });
-    var gatePos = graph.nodes[block.gate].pos;
-    var d = pts.map(function (p, i) { return (i ? "L" : "M") + p[0] + " " + p[1]; }).join(" ");
-    if (pts.length > 1) {
-      el("path", { "class": "route-halo", d: d }, layer.route);
-      el("path", { "class": "route-line", d: d }, layer.route);
-    }
-    var last = "M" + gatePos[0] + " " + gatePos[1] + " L" + block.pos[0] + " " + block.pos[1];
-    el("path", { "class": "route-halo", d: last }, layer.route);
-    el("path", { "class": "route-last", d: last }, layer.route);
-    drawHere(pts[0]);
-    drawSeat(block.pos, block.id);
-    lastFitPoints = pts.concat([block.pos]);
-    fitTo(lastFitPoints, 120);
-  }
-
-  function drawHereOnly() {
-    clearOverlay();
-    if (currentFrom) {
-      var pos = graph.nodes[currentFrom].pos;
-      drawHere(pos);
-      lastFitPoints = [pos];
-      fitTo([pos], 400);
-    } else {
-      lastFitPoints = [];
-      fitTo([], 0);
-    }
+  // 立体図でブロックをタップしたとき
+  function onBlockTap(block) {
+    els.block.value = block.id;
+    fillRows();
+    previewBlock(block);
+    Axo.setHint(block.id + "ブロックを選びました。" + (block.rows ? "列と番を入れて「ルートを表示」を押してください。" : "「ルートを表示」を押してください。"));
   }
 
   // ───────── 結果の表示
@@ -385,17 +183,15 @@
     }
     var f = readForm();
     if (f.error) { els.error.textContent = f.error; return; }
-    saveSeat({ block: f.block.id, row: f.seat.row, number: f.seat.number, avoidStairs: els.avoid.checked });
-    var r = R.describe(V, graph, currentFrom, f.block, f.seat, { avoidStairs: els.avoid.checked });
+    saveSeat({ block: f.block.id, row: f.seat.row, number: f.seat.number });
+    var r = R.describe(V, graph, currentFrom, f.block, f.seat, {});
     if (!r) {
       els.error.textContent = "ルートが見つかりませんでした。スタッフにお尋ねください。";
       return;
     }
-    drawRoute(r, f.block);
     showResult(r);
-    window.AxoView.render(r, f.block);
-    setHint("");
-    if (scroll) els.result.scrollIntoView({ behavior: "smooth", block: "start" });
+    Axo.render(r, f.block);
+    if (scroll) document.getElementById("axo-card").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   // ───────── はじめに
@@ -403,7 +199,7 @@
   fillFromSelect();
   renderHere();
   fillBlocks();
-  setupMap();
+  Axo.init({ onBlockTap: onBlockTap });
 
   var saved = loadSeat();
   if (saved && blocksById[saved.block]) {
@@ -411,7 +207,6 @@
     fillRows();
     if (saved.row) els.row.value = String(saved.row);
     if (saved.number) els.seat.value = saved.number;
-    els.avoid.checked = !!saved.avoidStairs;
   } else {
     fillRows();
   }
@@ -419,7 +214,7 @@
   els.block.addEventListener("change", function () {
     fillRows();
     var b = blocksById[els.block.value];
-    if (b) { previewBlock(b, false); setHint(""); }
+    if (b) previewBlock(b);
   });
   els.form.addEventListener("submit", function (e) { e.preventDefault(); route(true); });
   els.fromSelect.addEventListener("change", function () {
@@ -429,12 +224,12 @@
     if (currentFrom) url.searchParams.set("from", currentFrom); else url.searchParams.delete("from");
     history.replaceState(null, "", url);
     renderHere();
-    if (currentFrom && loadSeat()) route(false); else drawHereOnly();
+    if (currentFrom && loadSeat()) route(false); else showHere();
   });
 
   // QRを読み直したとき、座席番号を覚えていればすぐにルートを出す
   if (currentFrom && saved && blocksById[saved.block]) route(false);
-  else drawHereOnly();
+  else showHere();
 })();
 
 // ホーム画面に追加したとき、電波が弱くても開けるようにする
