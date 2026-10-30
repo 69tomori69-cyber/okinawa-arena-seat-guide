@@ -50,46 +50,36 @@
             <input id="seat-input" type="number" inputmode="numeric" min="1" placeholder="例：12">
           </div>
         </div>
-        <label class="check">
-          <input id="avoid-stairs" type="checkbox">
-          階段をなるべく避ける（エレベーターを使う）
-        </label>
         <p id="form-error" class="form-error" role="alert"></p>
         <button type="submit" class="primary">ルートを表示</button>
       </form>
     </section>
 
-    <section class="card map-card" aria-label="座席図">
-      <div class="map-wrap">
-        <svg id="map" role="img" aria-label="座席図とルート"></svg>
+    <section class="card map-card" id="axo-card" aria-label="立体図">
+      <div class="axo-head">
+        <span id="axo-floor" class="floor-badge">2F</span>
+        <span id="axo-caption" class="axo-caption" aria-live="polite"></span>
+      </div>
+      <div class="axo-wrap">
+        <svg id="axo" role="img" aria-label="立体図と道順"></svg>
+        <div id="floor-rail" class="floor-rail" aria-hidden="true"></div>
         <div class="map-tools">
-          <button type="button" id="zoom-in" aria-label="拡大">＋</button>
-          <button type="button" id="zoom-out" aria-label="縮小">－</button>
-          <button type="button" id="zoom-fit" aria-label="ルート全体を表示">全体</button>
+          <button type="button" id="axo-zoom-in" aria-label="拡大">＋</button>
+          <button type="button" id="axo-zoom-out" aria-label="縮小">－</button>
+          <button type="button" id="axo-zoom-fit" aria-label="元の表示に戻す">戻す</button>
         </div>
       </div>
-      <p class="map-hint">ブロックをタップすると選べます。2本指で拡大・縮小、ドラッグで移動できます。赤い丸は入口（ゲート）です。</p>
+      <div class="axo-nav" id="axo-nav" hidden>
+        <button type="button" id="step-prev">◀ 前へ</button>
+        <span id="step-count" class="step-count"></span>
+        <button type="button" id="step-next">次へ ▶</button>
+      </div>
+      <p class="map-hint" id="axo-hint">ブロックをタップすると選べます。2本指で拡大・縮小、ドラッグで移動できます。赤い丸は入口（ゲート）です。</p>
     </section>
 
     <section class="card" id="result" hidden aria-labelledby="result-title">
       <h2 id="result-title">座席までの道順</h2>
       <p id="result-summary" class="summary"></p>
-
-      <div id="axo-card" class="axo-card" hidden>
-        <div class="axo-head">
-          <span id="axo-floor" class="floor-badge">2F</span>
-          <span id="axo-caption" class="axo-caption" aria-live="polite"></span>
-        </div>
-        <div class="axo-wrap">
-          <svg id="axo" role="img" aria-label="立体図と道順" preserveAspectRatio="xMidYMid meet"></svg>
-          <div id="floor-rail" class="floor-rail" aria-hidden="true"></div>
-        </div>
-        <div class="axo-nav">
-          <button type="button" id="step-prev">◀ 前へ</button>
-          <span id="step-count" class="step-count"></span>
-          <button type="button" id="step-next">次へ ▶</button>
-        </div>
-      </div>
 
       <ol id="steps" class="steps"></ol>
       <p class="note">手順をタップすると、立体図でその場所を表示します。</p>
