@@ -198,12 +198,6 @@
         text: gate.name + "からアリーナフロアに入り、コートサイドの「" + block.id + "」の席へ。",
         sub: "コートサイド席はサウスエントランスからの入場です。フロアでの入り方は確認中なので、スタッフにチケットをお見せください。"
       });
-    } else if (block.group === "sub") {
-      steps.push({
-        kind: "seat",
-        text: gate.name + "から客席に入り、" + block.id + "の区画へ向かいます。",
-        sub: "区画の正式な入り方は確認中です。区画の番号表示を目印にしてください。"
-      });
     } else if (block.group === "box") {
       steps.push({
         kind: "seat",
