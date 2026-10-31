@@ -170,7 +170,7 @@ button.primary:active { background: var(--accent-dark); }
 .axo-caption { font-size: 0.95rem; font-weight: bold; line-height: 1.5; }
 .axo-wrap {
   position: relative;
-  aspect-ratio: 2000 / 1729;
+  aspect-ratio: 1360 / 1210;
   background: linear-gradient(#eef1f6, #f8f9fb);
   border-radius: 10px;
   overflow: hidden;
@@ -197,15 +197,15 @@ button.primary:active { background: var(--accent-dark); }
 .rail-floor.active { background: var(--navy-soft); color: #fff; }
 .rail-floor.current { background: var(--accent); color: #fff; font-weight: bold; }
 
-.axo-route-all { fill: none; stroke: var(--route); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; opacity: 0.35; }
-.axo-route-halo { fill: none; stroke: #fff; stroke-width: 30; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
-.axo-route { fill: none; stroke: var(--route); stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; }
+.axo-route-all { fill: none; stroke: var(--route); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.35; }
+.axo-route-halo { fill: none; stroke: #fff; stroke-width: 15; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
+.axo-route { fill: none; stroke: var(--route); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
 .axo-route-flow {
-  fill: none; stroke: #fff; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 2 40;
+  fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1 20;
   animation: axo-flow 1s linear infinite;
 }
-@keyframes axo-flow { to { stroke-dashoffset: -42; } }
-.axo-here { fill: #1f6feb; stroke: #fff; stroke-width: 7; }
+@keyframes axo-flow { to { stroke-dashoffset: -21; } }
+.axo-here { fill: #1f6feb; stroke: #fff; stroke-width: 4; }
 .axo-here-pulse { fill: #1f6feb; opacity: 0.25; }
 .axo-seat { fill: var(--accent); stroke: #fff; stroke-width: 6; }
 .axo-seat-glow {
@@ -214,34 +214,24 @@ button.primary:active { background: var(--accent-dark); }
 }
 .axo-label rect { fill: rgba(20, 40, 75, 0.92); }
 .axo-label.seat rect { fill: var(--accent-dark); }
-.axo-label text { fill: #fff; font-size: 40px; font-weight: bold; font-family: inherit; }
-.axo-lift rect { fill: #fff; stroke: var(--navy); stroke-width: 6; }
-.axo-lift text { fill: var(--navy); font-size: 38px; font-weight: bold; font-family: inherit; }
-/* 平面図の形 */
-.fm-ground { fill: #eef1f6; }
-.fm-building { fill: #e6eaf1; stroke: #c3cbd9; stroke-width: 4; }
-.fm-bowl { fill: #dfe4ed; stroke: #c3cbd9; stroke-width: 4; }
-.fm-apron { fill: #cfd6e2; }
-.fm-court { fill: #e9c99a; stroke: #fff; stroke-width: 5; }
-.fm-court-line { stroke: #fff; stroke-width: 4; fill: none; }
-.fm-below { opacity: 0.35; }
-.fm-upper-ring { fill: #e3e8f0; stroke: #b9c3d6; stroke-width: 4; }
-.fm-lounge-area { fill: #fbeec4; stroke: #e2c770; stroke-width: 4; }
-.fm-concourse { fill: none; stroke: #ffffff; stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; }
-.fm-block { stroke: #fff; stroke-width: 4; }
-.fm-block.lower { fill: #8fa8cf; }
-.fm-block.box { fill: #b48fcf; }
-.fm-block.upper { fill: #7fb6a8; }
-.fm-block.lounge { fill: #e6c35c; }
-.fm-block.selected { fill: var(--accent); }
-.fm-block-label { fill: #fff; font-size: 30px; font-weight: bold; font-family: inherit; pointer-events: none; }
-.fm-block-label.small { font-size: 20px; }
-.fm-core rect { fill: #fff; stroke: #6b7489; stroke-width: 4; }
-.fm-core text { fill: #3a4256; font-size: 26px; font-weight: bold; font-family: inherit; }
-.fm-gate { fill: #d93025; stroke: #fff; stroke-width: 5; }
-.fm-gate-label { fill: #a3201a; font-size: 26px; font-weight: bold; font-family: inherit; paint-order: stroke; stroke: #fff; stroke-width: 6; }
-.fm-climb circle { fill: var(--accent); stroke: #fff; stroke-width: 6; }
-.fm-climb text { fill: #fff; font-size: 52px; font-weight: bold; }
+.axo-label text { fill: #fff; font-size: 20px; font-weight: bold; font-family: inherit; }
+.axo-lift rect { fill: #fff; stroke: var(--accent); stroke-width: 4; }
+.axo-lift text { fill: var(--accent-dark); font-size: 18px; font-weight: bold; font-family: inherit; }
+/* 平面図の上の印 */
+.fm-block-tag rect { fill: rgba(255, 255, 255, 0.9); stroke: #14284b; stroke-width: 1.5; }
+.fm-block-tag text { fill: #14284b; font-size: 13px; font-weight: bold; font-family: inherit; }
+.fm-block-tag.box text, .fm-block-tag.lounge text { font-size: 11px; }
+.fm-block-tag.selected rect { fill: var(--accent); stroke: #fff; }
+.fm-block-tag.selected text { fill: #fff; }
+.fm-block-tag { pointer-events: none; }
+.fm-core rect { fill: #fff; stroke: #2e7d32; stroke-width: 2.5; }
+.fm-core text { fill: #1b5e20; font-size: 15px; font-weight: bold; font-family: inherit; }
+.fm-core.ev rect { stroke: #6a1b9a; }
+.fm-core.ev text { fill: #6a1b9a; font-size: 12px; }
+.fm-gate { fill: #d93025; stroke: #fff; stroke-width: 3; }
+.fm-gate-label { fill: #a3201a; font-size: 14px; font-weight: bold; font-family: inherit; paint-order: stroke; stroke: #fff; stroke-width: 4; }
+.fm-climb circle { fill: var(--accent); stroke: #fff; stroke-width: 4; }
+.fm-climb text { fill: #fff; font-size: 28px; font-weight: bold; }
 
 /* 道順の手順（横にスライドするカード） */
 .step-slider {
@@ -286,8 +276,8 @@ button.primary:active { background: var(--accent-dark); }
 /* 階が入れ替わるアニメーション（下の階が沈み、上の階が降りてくる） */
 .axo-layer.enter-from-above { animation: enter-above 0.6s ease-out both; }
 .axo-layer.enter-from-below { animation: enter-below 0.6s ease-out both; }
-@keyframes enter-above { from { transform: translateY(-220px); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes enter-below { from { transform: translateY(220px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes enter-above { from { transform: translateY(-120px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes enter-below { from { transform: translateY(120px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 .going-up .from { animation: sink 3.2s ease-in-out infinite; }
 .going-up .to { animation: drop-in 3.2s ease-in-out infinite; }
@@ -295,18 +285,18 @@ button.primary:active { background: var(--accent-dark); }
 .going-down .to { animation: rise-in 3.2s ease-in-out infinite; }
 @keyframes sink {
   0%, 25% { transform: none; opacity: 1; }
-  55%, 100% { transform: translateY(180px); opacity: 0.18; }
+  55%, 100% { transform: translateY(100px); opacity: 0.18; }
 }
 @keyframes drop-in {
-  0%, 25% { transform: translateY(-260px); opacity: 0; }
+  0%, 25% { transform: translateY(-140px); opacity: 0; }
   55%, 100% { transform: none; opacity: 1; }
 }
 @keyframes rise-away {
   0%, 25% { transform: none; opacity: 1; }
-  55%, 100% { transform: translateY(-180px); opacity: 0.18; }
+  55%, 100% { transform: translateY(-100px); opacity: 0.18; }
 }
 @keyframes rise-in {
-  0%, 25% { transform: translateY(260px); opacity: 0; }
+  0%, 25% { transform: translateY(140px); opacity: 0; }
   55%, 100% { transform: none; opacity: 1; }
 }
 .axo-climb { animation: climb-show 3.2s ease-in-out infinite; }
