@@ -3,7 +3,7 @@
  * 館内で電波が弱いときは保存したものを使う。
  * 電波があるときは常に最新を取りに行く（データを直したらすぐ反映されるように）。
  */
-var CACHE = "seat-guide-v7";
+var CACHE = "seat-guide-v8";
 var FILES = [
   "./",
   "index.html",
