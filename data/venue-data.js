@@ -275,9 +275,8 @@ window.VENUE = {
   blockGroups: [
     { id: "court", name: "1階 コートサイド（1〜10・KGB・AWB・Hollywood・Broadway）" },
     { id: "lower", name: "下段スタンド（201〜234）" },
-    { id: "sub", name: "下段の区画（201A〜208A）" },
     { id: "upper", name: "上段スタンド（401〜433）" },
-    { id: "lounge", name: "パノラマラウンジ（500〜514）" }
+    { id: "lounge", name: "パノラマラウンジ（501〜513）" }
   ],
 
   blocks: [
@@ -332,21 +331,6 @@ window.VENUE = {
     { id: "233", group: "lower", gate: "gate-G21", rows: [12, 18], aisleAfterRow: 11, pos: [804, 812], tentative: true },
     { id: "234", group: "lower", gate: "gate-G21", rows: [12, 18], aisleAfterRow: 11, pos: [782, 850], tentative: true },
 
-    // ── 下段の区画（201A〜208A）：ゲート割より 201〜204はG21、205〜208はA21
-    { id: "201A", group: "sub", gate: "gate-G21", rows: null, pos: [743, 888], tentative: true },
-    { id: "202A", group: "sub", gate: "gate-G21", rows: null, pos: [711, 921], tentative: true },
-    { id: "203A", group: "sub", gate: "gate-G21", rows: null, pos: [671, 946], tentative: true },
-    { id: "203B", group: "sub", gate: "gate-G21", rows: null, pos: [644, 946], tentative: true },
-    { id: "203C", group: "sub", gate: "gate-G21", rows: null, pos: [624, 946], tentative: true },
-    { id: "204A", group: "sub", gate: "gate-G21", rows: null, pos: [597, 945], tentative: true },
-    { id: "204B", group: "sub", gate: "gate-G21", rows: null, pos: [578, 945], tentative: true },
-    { id: "205A", group: "sub", gate: "gate-A21", rows: null, pos: [550, 945], tentative: true },
-    { id: "205B", group: "sub", gate: "gate-A21", rows: null, pos: [531, 944], tentative: true },
-    { id: "206A", group: "sub", gate: "gate-A21", rows: null, pos: [503, 944], tentative: true },
-    { id: "206B", group: "sub", gate: "gate-A21", rows: null, pos: [484, 944], tentative: true },
-    { id: "206C", group: "sub", gate: "gate-A21", rows: null, pos: [457, 943], tentative: true },
-    { id: "207A", group: "sub", gate: "gate-A21", rows: null, pos: [416, 917], tentative: true },
-    { id: "208A", group: "sub", gate: "gate-A21", rows: null, pos: [383, 884], tentative: true },
 
     // ── 上段スタンド
     { id: "401", group: "upper", gate: "gate-lobby4-E", rows: [1, 11], aisleAfterRow: 11, pos: [782, 969], tentative: true },
@@ -385,7 +369,6 @@ window.VENUE = {
     { id: "433ST", group: "upper", gate: "gate-G41", rows: [1, 11], aisleAfterRow: 4, pos: [942, 909] },
 
     // ── パノラマラウンジ：入り方は確認中。A41・G41ゲートを入り、横の階段11・12で5階ロビーへ
-    { id: "500", group: "lounge", gate: "lounge", rows: null, pos: [854, 947], tentative: true },
     { id: "501", group: "lounge", gate: "lounge", rows: null, pos: [789, 1007], tentative: true },
     { id: "502", group: "lounge", gate: "lounge", rows: null, pos: [768, 1034], tentative: true },
     { id: "503", group: "lounge", gate: "lounge", rows: null, pos: [744, 1061], tentative: true },
@@ -399,7 +382,6 @@ window.VENUE = {
     { id: "511", group: "lounge", gate: "lounge", rows: null, pos: [374, 1059], tentative: true },
     { id: "512", group: "lounge", gate: "lounge", rows: null, pos: [348, 1032], tentative: true },
     { id: "513", group: "lounge", gate: "lounge", rows: null, pos: [325, 1005], tentative: true },
-    { id: "514", group: "lounge", gate: "lounge", rows: null, pos: [267, 948], tentative: true }
   ],
 
   // 座席番号（番）の入力で受け付ける最大値（仮）。実際の番号の範囲は座席図から読み切れていません。

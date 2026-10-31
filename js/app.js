@@ -83,10 +83,17 @@
 
   // ───────── 座席番号の入力
 
+  // メインエントランス（2階）から入る人には、1階のコートサイド席は出さない
+  function groupHidden(groupId) {
+    return groupId === "court" && currentFrom === "gate-main";
+  }
+
   function fillBlocks() {
+    var prev = els.block.value;
     els.block.innerHTML = "";
     els.block.add(new Option("選んでください", ""));
     V.blockGroups.forEach(function (g) {
+      if (groupHidden(g.id)) return;
       var og = document.createElement("optgroup");
       og.label = g.name;
       V.blocks.filter(function (b) { return b.group === g.id; }).forEach(function (b) {
@@ -94,6 +101,7 @@
       });
       els.block.appendChild(og);
     });
+    if (prev && blocksById[prev] && !groupHidden(blocksById[prev].group)) els.block.value = prev;
   }
 
   function fillRows() {
@@ -206,6 +214,7 @@
   Axo.init({ onBlockTap: onBlockTap });
 
   var saved = loadSeat();
+  if (saved && (!blocksById[saved.block] || groupHidden(blocksById[saved.block].group))) saved = null;
   if (saved && blocksById[saved.block]) {
     els.block.value = saved.block;
     fillRows();
@@ -228,7 +237,9 @@
     if (currentFrom) url.searchParams.set("from", currentFrom); else url.searchParams.delete("from");
     history.replaceState(null, "", url);
     renderHere();
-    if (currentFrom && loadSeat()) route(false); else showHere();
+    fillBlocks();
+    fillRows();
+    if (currentFrom && loadSeat() && els.block.value) route(false); else showHere();
   });
 
   // QRを読み直したとき、座席番号を覚えていればすぐにルートを出す
