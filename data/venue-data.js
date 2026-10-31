@@ -135,12 +135,16 @@ window.VENUE = {
     { id: "ev4-U", name: "エレベーター4（4階）", floor: "U", pos: [65, 600], type: "core", tentative: true },
     { id: "ev5-L", name: "エレベーター5（2階）", floor: "L", pos: [1055, 280], type: "core", tentative: true },
     { id: "ev5-U", name: "エレベーター5（4階）", floor: "U", pos: [1055, 280], type: "core", tentative: true },
-    // ── 1階：サウスエントランスから、コートサイド席（アリーナフロア）へ（仮）
-    { id: "gate-south", name: "サウスエントランス", floor: "G", pos: [235, 1160], type: "gate", tentative: true },
-    { id: "G-lobby", name: "1階ロビー", floor: "G", pos: [300, 1150], type: "ring", tentative: true },
-    { id: "G-corr", name: "ロビー奥の通路", floor: "G", pos: [305, 1035], type: "ring", tentative: true },
-    { id: "G-floor-front", name: "フロア入口の前", floor: "G", pos: [365, 900], type: "ring", tentative: true },
-    { id: "gate-floor", name: "アリーナフロア入口", floor: "G", pos: [430, 835], type: "gate", tentative: true },
+    // ── 1階：サウスエントランス（右下）から、コートサイド席（アリーナフロア）へ（仮）
+    { id: "gate-south", name: "サウスエントランス", floor: "G", pos: [905, 1160], type: "gate", tentative: true },
+    { id: "gate-north", name: "ノースエントランス", floor: "G", pos: [235, 1160], type: "gate", tentative: true },
+    { id: "G-lobby-E", name: "1階ロビー（サウス側）", floor: "G", pos: [822, 1150], type: "ring", tentative: true },
+    { id: "G-lobby-W", name: "1階ロビー（ノース側）", floor: "G", pos: [300, 1150], type: "ring", tentative: true },
+    { id: "G-hall", name: "ホール", floor: "G", pos: [561, 1100], type: "ring", tentative: true },
+    { id: "G-corr", name: "ロビー奥の通路", floor: "G", pos: [817, 1035], type: "ring", tentative: true },
+    { id: "G-floor-front", name: "フロア入口の前", floor: "G", pos: [757, 900], type: "ring", tentative: true },
+    { id: "gate-floor", name: "アリーナフロア入口", floor: "G", pos: [692, 835], type: "gate", tentative: true },
+    { id: "ev3-G", name: "エレベーター3（1階）", floor: "G", pos: [812, 1085], type: "core", tentative: true },
     { id: "ev12-G", name: "エレベーター1・2（1階）", floor: "G", pos: [335, 1085], type: "core", tentative: true },
   ],
 
@@ -252,10 +256,15 @@ window.VENUE = {
     ["st11-U", "st11-T", "stairs"], ["st12-U", "st12-T", "stairs"],
     ["st11-T", "T-W", "walk"], ["T-W", "lounge", "walk"], ["lounge", "T-E", "walk"], ["T-E", "st12-T", "walk"],
     // 1階
-    ["gate-south", "G-lobby", "walk"],
-    ["G-lobby", "ev12-G", "walk"],
+    ["gate-south", "G-lobby-E", "walk"],
+    ["gate-north", "G-lobby-W", "walk"],
+    ["G-lobby-W", "ev12-G", "walk"],
     ["ev12-G", "ev12-L", "elevator"],
-    ["G-lobby", "G-corr", "walk"],
+    ["G-lobby-E", "ev3-G", "walk"],
+    ["ev3-G", "ev3-L", "elevator"],
+    ["G-lobby-W", "G-hall", "walk"],
+    ["G-hall", "G-lobby-E", "walk"],
+    ["G-lobby-E", "G-corr", "walk"],
     ["G-corr", "G-floor-front", "walk"],
     ["G-floor-front", "gate-floor", "walk"]
   ],
@@ -485,6 +494,8 @@ window.VENUE = {
     { id: "qr-037", node: "ev4-U", place: "エレベーター4 4階の乗り口", tentative: true },
     { id: "qr-038", node: "ev5-U", place: "エレベーター5 4階の乗り口", tentative: true },
     { id: "qr-039", node: "gate-south", place: "サウスエントランス（1階）", tentative: true },
-    { id: "qr-040", node: "ev12-G", place: "エレベーター1・2 1階の乗り口", tentative: true }
+    { id: "qr-040", node: "ev12-G", place: "エレベーター1・2 1階の乗り口", tentative: true },
+    { id: "qr-041", node: "gate-north", place: "ノースエントランス（1階）", tentative: true },
+    { id: "qr-042", node: "ev3-G", place: "エレベーター3 1階の乗り口", tentative: true }
   ]
 };

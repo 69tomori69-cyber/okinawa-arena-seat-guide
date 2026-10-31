@@ -105,7 +105,7 @@
       return;
     }
     els.rowField.hidden = false;
-    els.row.add(new Option("選択", ""));
+    els.row.add(new Option("未選択", ""));
     for (var r = b.rows[0]; r <= b.rows[1]; r++) els.row.add(new Option(r + "列", String(r)));
     if (prev) els.row.value = prev;
   }
@@ -122,9 +122,7 @@
     var b = blocksById[els.block.value];
     if (!b) return { error: "ブロックを選んでください。" };
     var row = b.rows ? parseInt(els.row.value, 10) : null;
-    if (b.rows && !row) return { error: "列を選んでください。" };
     var num = els.seat.value ? parseInt(els.seat.value, 10) : null;
-    if (b.rows && !num) return { error: "番（席の番号）を入れてください。" };
     if (num !== null && (num < 1 || num > V.maxSeatNumber)) return { error: "番は 1〜" + V.maxSeatNumber + " の数字で入れてください。" };
     return { block: b, seat: { row: row, number: num } };
   }
@@ -148,7 +146,7 @@
     els.block.value = block.id;
     fillRows();
     previewBlock(block);
-    Axo.setHint(block.id + "ブロックを選びました。" + (block.rows ? "列と番を入れて「ルートを表示」を押してください。" : "「ルートを表示」を押してください。"));
+    Axo.setHint(block.id + "ブロックを選びました。" + "「ルートを表示」を押してください（列・番は分かれば入れてください）。");
   }
 
   // ───────── 結果の表示

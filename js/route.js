@@ -230,7 +230,7 @@
       if (seat.number) {
         steps.push({
           kind: "seat",
-          text: seat.row + "列の席番号の表示を見ながら、" + seat.number + "番の席へ。",
+          text: (seat.row ? seat.row + "列の" : "") + "席番号の表示を見ながら、" + seat.number + "番の席へ。",
           sub: "番号が左右どちらから始まるかは調査中です。"
         });
       }

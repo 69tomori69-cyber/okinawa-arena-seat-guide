@@ -108,7 +108,7 @@
       var d = Math.hypot(dx, dy) || 1;
       var lx = n.pos[0] + dx / d * 24, ly = n.pos[1] + dy / d * 24 + 5;
       var t = el("text", { "class": "fm-gate-label", x: lx, y: ly, "text-anchor": "middle" }, g);
-      t.textContent = /^gate-lobby/.test(n.id) ? "ロビー入口" : n.id === "gate-south" ? "サウス" : n.id === "gate-floor" ? "フロア入口" : n.id.replace("gate-", "");
+      t.textContent = /^gate-lobby/.test(n.id) ? "ロビー入口" : n.id === "gate-south" ? "サウス" : n.id === "gate-north" ? "ノース" : n.id === "gate-floor" ? "フロア入口" : n.id.replace("gate-", "");
     });
   }
 
