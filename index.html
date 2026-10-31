@@ -34,7 +34,7 @@
     </section>
 
     <section class="card" aria-labelledby="seat-title">
-      <h2 id="seat-title">座席番号を入れてください</h2>
+      <h2 id="seat-title">ブロックを選んでください</h2>
       <form id="seat-form" novalidate>
         <div class="fields">
           <div class="field">
@@ -42,11 +42,11 @@
             <select id="block-select" required></select>
           </div>
           <div class="field" id="row-field">
-            <label for="row-select">列</label>
+            <label for="row-select">列（任意）</label>
             <select id="row-select"></select>
           </div>
           <div class="field">
-            <label for="seat-input">番</label>
+            <label for="seat-input">番（任意）</label>
             <input id="seat-input" type="number" inputmode="numeric" min="1" placeholder="例：12">
           </div>
         </div>
@@ -70,7 +70,11 @@
         </div>
       </div>
       <div id="step-slider" class="step-slider" hidden aria-label="道順の手順（横にスライド）"></div>
-      <div id="step-dots" class="step-dots" hidden></div>
+      <div id="step-nav" class="step-nav" hidden>
+        <button type="button" id="step-prev" aria-label="前の手順">◀ 前へ</button>
+        <div id="step-dots" class="step-dots"></div>
+        <button type="button" id="step-next" aria-label="次の手順">次へ ▶</button>
+      </div>
       <p class="map-hint" id="axo-hint">ブロックをタップすると選べます。2本指で拡大・縮小、ドラッグで移動できます。赤い丸は入口（ゲート）です。</p>
     </section>
 

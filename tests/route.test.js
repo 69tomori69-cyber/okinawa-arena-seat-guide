@@ -15,7 +15,9 @@ for (const q of V.qrCodes) assert.ok(g.nodes[q.node], `${q.id} の地点 ${q.nod
 let count = 0;
 for (const q of V.qrCodes) {
   for (const b of V.blocks) {
-    for (const avoidStairs of [false, true]) {
+    // 5階（パノラマラウンジ）との行き来は階段しかないので、階段なしの確認はしない
+    const fifth = b.group === "lounge" || g.nodes[q.node].floor === "T";
+    for (const avoidStairs of fifth ? [false] : [false, true]) {
       const seat = { row: b.rows ? b.rows[0] : null, number: 1 };
       const r = R.describe(V, g, q.node, b, seat, { avoidStairs });
       assert.ok(r, `${q.node} → ${b.id} のルートがありません`);
@@ -37,4 +39,9 @@ r.steps.forEach((s, i) => console.log(`${i + 1}. ${s.text}${s.sub ? "（" + s.su
 const r2 = R.describe(V, g, "gate-B21", V.blocks.find(b => b.id === "428"), { row: 8, number: 3 }, { avoidStairs: true });
 console.log("\n" + r2.seatLabel, r2.totalMeters + "m");
 r2.steps.forEach((s, i) => console.log(`${i + 1}. ${s.text}${s.sub ? "（" + s.sub + "）" : ""}`));
+// 例：A21ゲートから505（パノラマラウンジ）。A41ゲートを入って横の階段で5階へ
+const r3 = R.describe(V, g, "gate-A21", V.blocks.find(b => b.id === "505"), {}, {});
+console.log("\n" + r3.seatLabel, r3.totalMeters + "m");
+r3.steps.forEach((s, i) => console.log(`${i + 1}. ${s.text}${s.sub ? "（" + s.sub + "）" : ""}`));
+assert.ok(r3.path.includes("gate-A41") || r3.path.includes("gate-G41"), "ラウンジへはA41かG41ゲートを通ること");
 console.log(`\nOK: ${count} 通りのルートを確認しました`);

@@ -40,17 +40,19 @@
     return qr ? qr.node : null;
   }
 
-  var currentFrom = readFromParam();
+  // QRを読まずに開いたときは、2階メインエントランスから入場する前提で案内する
+  var currentFrom = readFromParam() || "gate-main";
 
   function selectableNodes() {
-    return V.nodes.filter(function (n) { return n.type === "gate" || n.type === "core" || n.type === "lounge"; });
+    return V.nodes.filter(function (n) { return n.type === "gate" || n.type === "lounge"; });
   }
 
   function fillFromSelect() {
     var groups = [
-      { label: "下段のゲート", test: function (n) { return n.type === "gate" && n.floor === "L"; } },
+      { label: "1階の入口", test: function (n) { return n.type === "gate" && n.floor === "G"; } },
+      { label: "2階の入口・ゲート", test: function (n) { return n.type === "gate" && n.floor === "L"; } },
       { label: "上段のゲート", test: function (n) { return n.type === "gate" && n.floor === "U"; } },
-      { label: "階段・エレベーター・ラウンジ（仮）", test: function (n) { return n.type !== "gate"; } }
+      { label: "ラウンジ（仮）", test: function (n) { return n.type !== "gate"; } }
     ];
     var nodes = selectableNodes();
     els.fromSelect.innerHTML = "";
@@ -104,7 +106,7 @@
       return;
     }
     els.rowField.hidden = false;
-    els.row.add(new Option("選択", ""));
+    els.row.add(new Option("未選択", ""));
     for (var r = b.rows[0]; r <= b.rows[1]; r++) els.row.add(new Option(r + "列", String(r)));
     if (prev) els.row.value = prev;
   }
@@ -121,9 +123,7 @@
     var b = blocksById[els.block.value];
     if (!b) return { error: "ブロックを選んでください。" };
     var row = b.rows ? parseInt(els.row.value, 10) : null;
-    if (b.rows && !row) return { error: "列を選んでください。" };
     var num = els.seat.value ? parseInt(els.seat.value, 10) : null;
-    if (b.rows && !num) return { error: "番（席の番号）を入れてください。" };
     if (num !== null && (num < 1 || num > V.maxSeatNumber)) return { error: "番は 1〜" + V.maxSeatNumber + " の数字で入れてください。" };
     return { block: b, seat: { row: row, number: num } };
   }
@@ -147,7 +147,7 @@
     els.block.value = block.id;
     fillRows();
     previewBlock(block);
-    Axo.setHint(block.id + "ブロックを選びました。" + (block.rows ? "列と番を入れて「ルートを表示」を押してください。" : "「ルートを表示」を押してください。"));
+    Axo.setHint(block.id + "ブロックを選びました。" + "「ルートを表示」を押してください（列・番は分かれば入れてください）。");
   }
 
   // ───────── 結果の表示
