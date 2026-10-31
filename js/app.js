@@ -40,7 +40,8 @@
     return qr ? qr.node : null;
   }
 
-  var currentFrom = readFromParam();
+  // QRを読まずに開いたときは、2階メインエントランスから入場する前提で案内する
+  var currentFrom = readFromParam() || "gate-main";
 
   function selectableNodes() {
     return V.nodes.filter(function (n) { return n.type === "gate" || n.type === "core" || n.type === "lounge"; });
@@ -49,7 +50,7 @@
   function fillFromSelect() {
     var groups = [
       { label: "1階の入口", test: function (n) { return n.type === "gate" && n.floor === "G"; } },
-      { label: "下段のゲート", test: function (n) { return n.type === "gate" && n.floor === "L"; } },
+      { label: "2階の入口・ゲート", test: function (n) { return n.type === "gate" && n.floor === "L"; } },
       { label: "上段のゲート", test: function (n) { return n.type === "gate" && n.floor === "U"; } },
       { label: "階段・エレベーター・ラウンジ（仮）", test: function (n) { return n.type !== "gate"; } }
     ];

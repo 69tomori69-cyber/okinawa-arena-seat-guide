@@ -136,16 +136,14 @@ window.VENUE = {
     { id: "ev5-L", name: "エレベーター5（2階）", floor: "L", pos: [1055, 280], type: "core", tentative: true },
     { id: "ev5-U", name: "エレベーター5（4階）", floor: "U", pos: [1055, 280], type: "core", tentative: true },
     // ── 1階：サウスエントランス（右下）から、コートサイド席（アリーナフロア）へ（仮）
+    // ── 2階メインエントランス（ロビー(2-1)の正面の扉）
+    { id: "gate-main", name: "2階メインエントランス", floor: "L", pos: [561, 1175], type: "gate", tentative: true },
     { id: "gate-south", name: "サウスエントランス", floor: "G", pos: [905, 1160], type: "gate", tentative: true },
-    { id: "gate-north", name: "ノースエントランス", floor: "G", pos: [235, 1160], type: "gate", tentative: true },
     { id: "G-lobby-E", name: "1階ロビー（サウス側）", floor: "G", pos: [822, 1150], type: "ring", tentative: true },
-    { id: "G-lobby-W", name: "1階ロビー（ノース側）", floor: "G", pos: [300, 1150], type: "ring", tentative: true },
-    { id: "G-hall", name: "ホール", floor: "G", pos: [561, 1100], type: "ring", tentative: true },
     { id: "G-corr", name: "ロビー奥の通路", floor: "G", pos: [817, 1035], type: "ring", tentative: true },
     { id: "G-floor-front", name: "フロア入口の前", floor: "G", pos: [757, 900], type: "ring", tentative: true },
     { id: "gate-floor", name: "アリーナフロア入口", floor: "G", pos: [692, 835], type: "gate", tentative: true },
     { id: "ev3-G", name: "エレベーター3（1階）", floor: "G", pos: [812, 1085], type: "core", tentative: true },
-    { id: "ev12-G", name: "エレベーター1・2（1階）", floor: "G", pos: [335, 1085], type: "core", tentative: true },
   ],
 
   /*
@@ -255,15 +253,13 @@ window.VENUE = {
     ["gate-A41", "st11-U", "walk"], ["gate-G41", "st12-U", "walk"],
     ["st11-U", "st11-T", "stairs"], ["st12-U", "st12-T", "stairs"],
     ["st11-T", "T-W", "walk"], ["T-W", "lounge", "walk"], ["lounge", "T-E", "walk"], ["T-E", "st12-T", "walk"],
+    // 2階メインエントランス
+    ["gate-main", "L-lobby-W", "walk"],
+    ["gate-main", "L-lobby-E", "walk"],
     // 1階
     ["gate-south", "G-lobby-E", "walk"],
-    ["gate-north", "G-lobby-W", "walk"],
-    ["G-lobby-W", "ev12-G", "walk"],
-    ["ev12-G", "ev12-L", "elevator"],
     ["G-lobby-E", "ev3-G", "walk"],
     ["ev3-G", "ev3-L", "elevator"],
-    ["G-lobby-W", "G-hall", "walk"],
-    ["G-hall", "G-lobby-E", "walk"],
     ["G-lobby-E", "G-corr", "walk"],
     ["G-corr", "G-floor-front", "walk"],
     ["G-floor-front", "gate-floor", "walk"]
@@ -278,10 +274,8 @@ window.VENUE = {
    */
   blockGroups: [
     { id: "court", name: "1階 コートサイド（1〜10・KGB・AWB・Hollywood・Broadway）" },
-    { id: "front", name: "下段の前列（111〜116）" },
     { id: "lower", name: "下段スタンド（201〜234）" },
     { id: "sub", name: "下段の区画（201A〜208A）" },
-    { id: "box", name: "ボックス席など（301〜330）" },
     { id: "upper", name: "上段スタンド（401〜433）" },
     { id: "lounge", name: "パノラマラウンジ（500〜514）" }
   ],
@@ -302,13 +296,6 @@ window.VENUE = {
     { id: "AWB", group: "court", gate: "gate-floor", rows: null, pos: [643, 455], tentative: true },
     { id: "Hollywood", group: "court", gate: "gate-floor", rows: null, pos: [652, 554], tentative: true },
     { id: "Broadway", group: "court", gate: "gate-floor", rows: null, pos: [652, 670], tentative: true },
-    // ── 下段の前列（コート側）：ゲート割より 111〜113はB21、114〜116はB22
-    { id: "111", group: "front", gate: "gate-B21", rows: null, pos: [428, 733], tentative: true },
-    { id: "112", group: "front", gate: "gate-B21", rows: null, pos: [429, 690], tentative: true },
-    { id: "113", group: "front", gate: "gate-B21", rows: null, pos: [398, 636], tentative: true },
-    { id: "114", group: "front", gate: "gate-B22", rows: null, pos: [397, 585], tentative: true },
-    { id: "115", group: "front", gate: "gate-B22", rows: null, pos: [428, 532], tentative: true },
-    { id: "116", group: "front", gate: "gate-B22", rows: null, pos: [428, 498], tentative: true },
     // ── 下段スタンド
     { id: "201", group: "lower", gate: "gate-G21", rows: [1, 18], aisleAfterRow: 11, pos: [697, 829], tentative: true },
     { id: "202", group: "lower", gate: "gate-G21", rows: [1, 18], aisleAfterRow: 11, pos: [659, 861], tentative: true },
@@ -360,37 +347,6 @@ window.VENUE = {
     { id: "206C", group: "sub", gate: "gate-A21", rows: null, pos: [457, 943], tentative: true },
     { id: "207A", group: "sub", gate: "gate-A21", rows: null, pos: [416, 917], tentative: true },
     { id: "208A", group: "sub", gate: "gate-A21", rows: null, pos: [383, 884], tentative: true },
-    // ── ボックス席など（緑の区画）：正式名称・入り方は確認中
-    { id: "301", group: "box", gate: "gate-A21", rows: null, pos: [296, 868], tentative: true },
-    { id: "302", group: "box", gate: "gate-A21", rows: null, pos: [259, 833], tentative: true },
-    { id: "303", group: "box", gate: "gate-B21", rows: null, pos: [238, 792], tentative: true },
-    { id: "304", group: "box", gate: "gate-B21", rows: null, pos: [238, 757], tentative: true },
-    { id: "305", group: "box", gate: "gate-B21", rows: null, pos: [238, 727], tentative: true },
-    { id: "306", group: "box", gate: "gate-B21", rows: null, pos: [249, 693], tentative: true },
-    { id: "307", group: "box", gate: "gate-B21", rows: null, pos: [249, 657], tentative: true },
-    { id: "308", group: "box", gate: "gate-B21", rows: null, pos: [250, 622], tentative: true },
-    { id: "309", group: "box", gate: "gate-B22", rows: null, pos: [250, 590], tentative: true },
-    { id: "310", group: "box", gate: "gate-B22", rows: null, pos: [250, 553], tentative: true },
-    { id: "311", group: "box", gate: "gate-B22", rows: null, pos: [250, 518], tentative: true },
-    { id: "312", group: "box", gate: "gate-B22", rows: null, pos: [245, 484], tentative: true },
-    { id: "313", group: "box", gate: "gate-B22", rows: null, pos: [245, 451], tentative: true },
-    { id: "314", group: "box", gate: "gate-B22", rows: null, pos: [245, 415], tentative: true },
-    { id: "315", group: "box", gate: "gate-C21", rows: null, pos: [267, 381], tentative: true },
-    { id: "316", group: "box", gate: "gate-E21", rows: null, pos: [857, 371], tentative: true },
-    { id: "317", group: "box", gate: "gate-F21", rows: null, pos: [875, 416], tentative: true },
-    { id: "318", group: "box", gate: "gate-F21", rows: null, pos: [875, 448], tentative: true },
-    { id: "319", group: "box", gate: "gate-F21", rows: null, pos: [875, 483], tentative: true },
-    { id: "320", group: "box", gate: "gate-F21", rows: null, pos: [875, 517], tentative: true },
-    { id: "321", group: "box", gate: "gate-F21", rows: null, pos: [875, 551], tentative: true },
-    { id: "322", group: "box", gate: "gate-F21", rows: null, pos: [874, 586], tentative: true },
-    { id: "323", group: "box", gate: "gate-F22", rows: null, pos: [874, 620], tentative: true },
-    { id: "324", group: "box", gate: "gate-F22", rows: null, pos: [874, 655], tentative: true },
-    { id: "325", group: "box", gate: "gate-F22", rows: null, pos: [874, 690], tentative: true },
-    { id: "326", group: "box", gate: "gate-F22", rows: null, pos: [874, 724], tentative: true },
-    { id: "327", group: "box", gate: "gate-F22", rows: null, pos: [873, 757], tentative: true },
-    { id: "328", group: "box", gate: "gate-F22", rows: null, pos: [873, 790], tentative: true },
-    { id: "329", group: "box", gate: "gate-G21", rows: null, pos: [852, 833], tentative: true },
-    { id: "330", group: "box", gate: "gate-G21", rows: null, pos: [809, 871], tentative: true },
 
     // ── 上段スタンド
     { id: "401", group: "upper", gate: "gate-lobby4-E", rows: [1, 11], aisleAfterRow: 11, pos: [782, 969], tentative: true },
@@ -494,8 +450,7 @@ window.VENUE = {
     { id: "qr-037", node: "ev4-U", place: "エレベーター4 4階の乗り口", tentative: true },
     { id: "qr-038", node: "ev5-U", place: "エレベーター5 4階の乗り口", tentative: true },
     { id: "qr-039", node: "gate-south", place: "サウスエントランス（1階）", tentative: true },
-    { id: "qr-040", node: "ev12-G", place: "エレベーター1・2 1階の乗り口", tentative: true },
-    { id: "qr-041", node: "gate-north", place: "ノースエントランス（1階）", tentative: true },
-    { id: "qr-042", node: "ev3-G", place: "エレベーター3 1階の乗り口", tentative: true }
+    { id: "qr-042", node: "ev3-G", place: "エレベーター3 1階の乗り口", tentative: true },
+    { id: "qr-043", node: "gate-main", place: "2階メインエントランス", tentative: true }
   ]
 };
