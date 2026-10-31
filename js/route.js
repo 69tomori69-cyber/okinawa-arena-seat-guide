@@ -149,6 +149,8 @@
           kind: "walk",
           text: a.floor === "T"
             ? "5階ロビーを進み、「" + end.name + "」まで行きます。"
+            : a.floor === "G"
+            ? "1階の通路を進み、「" + end.name + "」まで行きます。"
             : "コンコースを、客席側を" + (cw ? "右手" : "左手") + "に見ながら進み、「" + end.name + "」まで行きます。",
           sub: "約" + meters(venue, runPx) + "m",
           floor: a.floor,
@@ -189,6 +191,24 @@
         kind: "seat",
         text: "パノラマラウンジの入口から入り、" + block.id + "の席へ。",
         sub: "ラウンジ内の入り方は確認中です。入口のスタッフにチケットをお見せください。"
+      });
+    } else if (block.group === "court") {
+      steps.push({
+        kind: "seat",
+        text: gate.name + "からアリーナフロアに入り、コートサイドの「" + block.id + "」の席へ。",
+        sub: "コートサイド席はサウスエントランスからの入場です。フロアでの入り方は確認中なので、スタッフにチケットをお見せください。"
+      });
+    } else if (block.group === "front") {
+      steps.push({
+        kind: "seat",
+        text: gate.name + "から客席に入り、階段をコート側へ下りて" + block.id + "ブロックへ。",
+        sub: "列・番の並び方は確認中です。"
+      });
+    } else if (block.group === "sub") {
+      steps.push({
+        kind: "seat",
+        text: gate.name + "から客席に入り、" + block.id + "の区画へ向かいます。",
+        sub: "区画の正式な入り方は確認中です。区画の番号表示を目印にしてください。"
       });
     } else if (block.group === "box") {
       steps.push({

@@ -220,7 +220,7 @@ button.primary:active { background: var(--accent-dark); }
 /* 平面図の上の印 */
 .fm-block-tag rect { fill: rgba(255, 255, 255, 0.9); stroke: #14284b; stroke-width: 1.5; }
 .fm-block-tag text { fill: #14284b; font-size: 13px; font-weight: bold; font-family: inherit; }
-.fm-block-tag.box text, .fm-block-tag.lounge text { font-size: 11px; }
+.fm-block-tag.box text, .fm-block-tag.lounge text, .fm-block-tag.sub text, .fm-block-tag.court text { font-size: 11px; }
 .fm-block-tag.selected rect { fill: var(--accent); stroke: #fff; }
 .fm-block-tag.selected text { fill: #fff; }
 .fm-block-tag { pointer-events: none; }

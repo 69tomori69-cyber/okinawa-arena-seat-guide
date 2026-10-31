@@ -68,6 +68,6 @@ def render(n, out):
     cv2.imwrite(out, comp.astype(np.uint8))
 if __name__=='__main__':
     from PIL import Image
-    for n in [2,4,5]:
+    for n in [1,2,4,5]:
         render(n,'r%d.png'%n)
         Image.open('r%d.png'%n).save('../../assets/floors/%df.webp'%n,'WEBP',quality=82,method=6)

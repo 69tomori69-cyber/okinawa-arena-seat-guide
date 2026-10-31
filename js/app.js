@@ -48,6 +48,7 @@
 
   function fillFromSelect() {
     var groups = [
+      { label: "1階の入口", test: function (n) { return n.type === "gate" && n.floor === "G"; } },
       { label: "下段のゲート", test: function (n) { return n.type === "gate" && n.floor === "L"; } },
       { label: "上段のゲート", test: function (n) { return n.type === "gate" && n.floor === "U"; } },
       { label: "階段・エレベーター・ラウンジ（仮）", test: function (n) { return n.type !== "gate"; } }

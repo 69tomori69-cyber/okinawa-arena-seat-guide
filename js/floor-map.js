@@ -13,7 +13,7 @@
   var SVG_NS = "http://www.w3.org/2000/svg";
   var W = V.mapWidth, H = V.mapHeight;
   var CENTER = V.courtCenter;
-  var FLOOR_ORDER = ["5F", "4F", "2F"];
+  var FLOOR_ORDER = ["5F", "4F", "2F", "1F"];
   var DEFAULT_LEVEL = "2F";
 
   var $ = function (id) { return document.getElementById(id); };
@@ -74,10 +74,12 @@
       if (blockLevel(b) !== level) return;
       var sel = state.block && state.block.id === b.id && state.mode !== "here";
       // ボックス席（3階の部屋）はゲートの壁に重なるので、選んだときだけ出す
-      if (b.group === "box" && !sel) return;
-      var small = b.group === "box" || b.group === "lounge";
+      // 201A などの区画も細かく並んでいるので、選んだときだけ出す
+      if ((b.group === "box" || b.group === "sub") && !sel) return;
+      var small = b.group === "box" || b.group === "lounge" || b.group === "sub" || b.group === "court";
+      var w = Math.max(small ? 32 : 42, b.id.length * 8 + 12);
       var gl = el("g", { "class": "fm-block-tag " + b.group + (sel ? " selected" : ""), transform: "translate(" + b.pos[0] + "," + b.pos[1] + ")" }, g);
-      el("rect", { x: small ? -16 : -21, y: -10, width: small ? 32 : 42, height: 20, rx: 6 }, gl);
+      el("rect", { x: -w / 2, y: -10, width: w, height: 20, rx: 6 }, gl);
       var t = el("text", { x: 0, y: 6, "text-anchor": "middle" }, gl);
       t.textContent = b.id;
     });
@@ -106,7 +108,7 @@
       var d = Math.hypot(dx, dy) || 1;
       var lx = n.pos[0] + dx / d * 24, ly = n.pos[1] + dy / d * 24 + 5;
       var t = el("text", { "class": "fm-gate-label", x: lx, y: ly, "text-anchor": "middle" }, g);
-      t.textContent = /^gate-lobby/.test(n.id) ? "ロビー入口" : n.id.replace("gate-", "");
+      t.textContent = /^gate-lobby/.test(n.id) ? "ロビー入口" : n.id === "gate-south" ? "サウス" : n.id === "gate-floor" ? "フロア入口" : n.id.replace("gate-", "");
     });
   }
 

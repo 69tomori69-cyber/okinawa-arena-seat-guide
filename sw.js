@@ -3,7 +3,7 @@
  * 館内で電波が弱いときは保存したものを使う。
  * 電波があるときは常に最新を取りに行く（データを直したらすぐ反映されるように）。
  */
-var CACHE = "seat-guide-v6";
+var CACHE = "seat-guide-v7";
 var FILES = [
   "./",
   "index.html",
@@ -12,6 +12,7 @@ var FILES = [
   "js/route.js",
   "js/floor-map.js",
   "js/app.js",
+  "assets/floors/1f.webp",
   "assets/floors/2f.webp",
   "assets/floors/4f.webp",
   "assets/floors/5f.webp",

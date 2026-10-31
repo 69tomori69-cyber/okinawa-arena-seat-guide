@@ -1,7 +1,7 @@
 /*
  * 沖縄サントリーアリーナ 座席案内 データ
  *
- * 座標は、平面図の画像（assets/floors/2f.webp・4f.webp）を横1360×縦1210として見たときの位置です。左上が (0, 0)。
+ * 座標は、平面図の画像（assets/floors/1f.webp〜5f.webp）を横1360×縦1210として見たときの位置です。左上が (0, 0)。
  * 平面図は施設の図面（各階平面図）から作っています。図面の向きのまま、下がエントランス（正面入口）側です。
  * ブロックの位置は座席図PDF（2027-28 最新版）から、柱4本の位置を合わせて図面の上に移しました。
  * 「tentative: true」が付いているものは仮の値です。現地調査やフロアマップで
@@ -17,12 +17,14 @@ window.VENUE = {
 
   floors: {
     // axo: 平面図で何階として表示するか（下の階から順に書く）
+    G: { name: "1階通路", floorLabel: "1階", axo: "1F", tentative: true },
     L: { name: "下段コンコース", floorLabel: "2階", axo: "2F", tentative: true },
     U: { name: "上段コンコース", floorLabel: "4階", axo: "4F", tentative: true },
     T: { name: "5階ロビー", floorLabel: "5階", axo: "5F", tentative: true }
   },
   // 各階の平面図（施設の図面を、客席は紺・コートは木の色・床はグレーに塗り分けたもの）
   floorImages: {
+    "1F": "assets/floors/1f.webp",
     "2F": "assets/floors/2f.webp",
     "4F": "assets/floors/4f.webp",
     "5F": "assets/floors/5f.webp"
@@ -132,7 +134,14 @@ window.VENUE = {
     { id: "ev4-L", name: "エレベーター4（2階）", floor: "L", pos: [65, 600], type: "core", tentative: true },
     { id: "ev4-U", name: "エレベーター4（4階）", floor: "U", pos: [65, 600], type: "core", tentative: true },
     { id: "ev5-L", name: "エレベーター5（2階）", floor: "L", pos: [1055, 280], type: "core", tentative: true },
-    { id: "ev5-U", name: "エレベーター5（4階）", floor: "U", pos: [1055, 280], type: "core", tentative: true }
+    { id: "ev5-U", name: "エレベーター5（4階）", floor: "U", pos: [1055, 280], type: "core", tentative: true },
+    // ── 1階：サウスエントランスから、コートサイド席（アリーナフロア）へ（仮）
+    { id: "gate-south", name: "サウスエントランス", floor: "G", pos: [235, 1160], type: "gate", tentative: true },
+    { id: "G-lobby", name: "1階ロビー", floor: "G", pos: [300, 1150], type: "ring", tentative: true },
+    { id: "G-corr", name: "ロビー奥の通路", floor: "G", pos: [305, 1035], type: "ring", tentative: true },
+    { id: "G-floor-front", name: "フロア入口の前", floor: "G", pos: [365, 900], type: "ring", tentative: true },
+    { id: "gate-floor", name: "アリーナフロア入口", floor: "G", pos: [430, 835], type: "gate", tentative: true },
+    { id: "ev12-G", name: "エレベーター1・2（1階）", floor: "G", pos: [335, 1085], type: "core", tentative: true },
   ],
 
   /*
@@ -241,7 +250,14 @@ window.VENUE = {
     // パノラマラウンジ（5階）：A41・G41ゲートを入り、すぐ横の階段で5階へ
     ["gate-A41", "st11-U", "walk"], ["gate-G41", "st12-U", "walk"],
     ["st11-U", "st11-T", "stairs"], ["st12-U", "st12-T", "stairs"],
-    ["st11-T", "T-W", "walk"], ["T-W", "lounge", "walk"], ["lounge", "T-E", "walk"], ["T-E", "st12-T", "walk"]
+    ["st11-T", "T-W", "walk"], ["T-W", "lounge", "walk"], ["lounge", "T-E", "walk"], ["T-E", "st12-T", "walk"],
+    // 1階
+    ["gate-south", "G-lobby", "walk"],
+    ["G-lobby", "ev12-G", "walk"],
+    ["ev12-G", "ev12-L", "elevator"],
+    ["G-lobby", "G-corr", "walk"],
+    ["G-corr", "G-floor-front", "walk"],
+    ["G-floor-front", "gate-floor", "walk"]
   ],
 
   /*
@@ -252,13 +268,38 @@ window.VENUE = {
    * 座席番号の並び方向（左から／右から）は座席図から読み取れないため未設定です。
    */
   blockGroups: [
+    { id: "court", name: "1階 コートサイド（1〜10・KGB・AWB・Hollywood・Broadway）" },
+    { id: "front", name: "下段の前列（111〜116）" },
     { id: "lower", name: "下段スタンド（201〜234）" },
+    { id: "sub", name: "下段の区画（201A〜208A）" },
     { id: "box", name: "ボックス席など（301〜330）" },
     { id: "upper", name: "上段スタンド（401〜433）" },
     { id: "lounge", name: "パノラマラウンジ（500〜514）" }
   ],
 
   blocks: [
+    // ── 1階 コートサイド：サウスエントランスから入り、アリーナフロアへ（仮）
+    { id: "1", group: "court", gate: "gate-floor", rows: null, pos: [603, 785], tentative: true },
+    { id: "2", group: "court", gate: "gate-floor", rows: null, pos: [526, 784], tentative: true },
+    { id: "3", group: "court", gate: "gate-floor", rows: null, pos: [467, 705], tentative: true },
+    { id: "4", group: "court", gate: "gate-floor", rows: null, pos: [465, 610], tentative: true },
+    { id: "5", group: "court", gate: "gate-floor", rows: null, pos: [466, 517], tentative: true },
+    { id: "6", group: "court", gate: "gate-floor", rows: null, pos: [524, 437], tentative: true },
+    { id: "7", group: "court", gate: "gate-floor", rows: null, pos: [601, 438], tentative: true },
+    { id: "8", group: "court", gate: "gate-floor", rows: null, pos: [674, 535], tentative: true },
+    { id: "9", group: "court", gate: "gate-floor", rows: null, pos: [675, 612], tentative: true },
+    { id: "10", group: "court", gate: "gate-floor", rows: null, pos: [676, 703], tentative: true },
+    { id: "KGB", group: "court", gate: "gate-floor", rows: null, pos: [642, 771], tentative: true },
+    { id: "AWB", group: "court", gate: "gate-floor", rows: null, pos: [643, 455], tentative: true },
+    { id: "Hollywood", group: "court", gate: "gate-floor", rows: null, pos: [652, 554], tentative: true },
+    { id: "Broadway", group: "court", gate: "gate-floor", rows: null, pos: [652, 670], tentative: true },
+    // ── 下段の前列（コート側）：ゲート割より 111〜113はB21、114〜116はB22
+    { id: "111", group: "front", gate: "gate-B21", rows: null, pos: [428, 733], tentative: true },
+    { id: "112", group: "front", gate: "gate-B21", rows: null, pos: [429, 690], tentative: true },
+    { id: "113", group: "front", gate: "gate-B21", rows: null, pos: [398, 636], tentative: true },
+    { id: "114", group: "front", gate: "gate-B22", rows: null, pos: [397, 585], tentative: true },
+    { id: "115", group: "front", gate: "gate-B22", rows: null, pos: [428, 532], tentative: true },
+    { id: "116", group: "front", gate: "gate-B22", rows: null, pos: [428, 498], tentative: true },
     // ── 下段スタンド
     { id: "201", group: "lower", gate: "gate-G21", rows: [1, 18], aisleAfterRow: 11, pos: [697, 829], tentative: true },
     { id: "202", group: "lower", gate: "gate-G21", rows: [1, 18], aisleAfterRow: 11, pos: [659, 861], tentative: true },
@@ -295,6 +336,21 @@ window.VENUE = {
     { id: "233", group: "lower", gate: "gate-G21", rows: [12, 18], aisleAfterRow: 11, pos: [804, 812], tentative: true },
     { id: "234", group: "lower", gate: "gate-G21", rows: [12, 18], aisleAfterRow: 11, pos: [782, 850], tentative: true },
 
+    // ── 下段の区画（201A〜208A）：ゲート割より 201〜204はG21、205〜208はA21
+    { id: "201A", group: "sub", gate: "gate-G21", rows: null, pos: [743, 888], tentative: true },
+    { id: "202A", group: "sub", gate: "gate-G21", rows: null, pos: [711, 921], tentative: true },
+    { id: "203A", group: "sub", gate: "gate-G21", rows: null, pos: [671, 946], tentative: true },
+    { id: "203B", group: "sub", gate: "gate-G21", rows: null, pos: [644, 946], tentative: true },
+    { id: "203C", group: "sub", gate: "gate-G21", rows: null, pos: [624, 946], tentative: true },
+    { id: "204A", group: "sub", gate: "gate-G21", rows: null, pos: [597, 945], tentative: true },
+    { id: "204B", group: "sub", gate: "gate-G21", rows: null, pos: [578, 945], tentative: true },
+    { id: "205A", group: "sub", gate: "gate-A21", rows: null, pos: [550, 945], tentative: true },
+    { id: "205B", group: "sub", gate: "gate-A21", rows: null, pos: [531, 944], tentative: true },
+    { id: "206A", group: "sub", gate: "gate-A21", rows: null, pos: [503, 944], tentative: true },
+    { id: "206B", group: "sub", gate: "gate-A21", rows: null, pos: [484, 944], tentative: true },
+    { id: "206C", group: "sub", gate: "gate-A21", rows: null, pos: [457, 943], tentative: true },
+    { id: "207A", group: "sub", gate: "gate-A21", rows: null, pos: [416, 917], tentative: true },
+    { id: "208A", group: "sub", gate: "gate-A21", rows: null, pos: [383, 884], tentative: true },
     // ── ボックス席など（緑の区画）：正式名称・入り方は確認中
     { id: "301", group: "box", gate: "gate-A21", rows: null, pos: [296, 868], tentative: true },
     { id: "302", group: "box", gate: "gate-A21", rows: null, pos: [259, 833], tentative: true },
@@ -363,7 +419,7 @@ window.VENUE = {
     { id: "433", group: "upper", gate: "gate-G41", rows: [1, 11], aisleAfterRow: 4, pos: [873, 877] },
     { id: "433ST", group: "upper", gate: "gate-G41", rows: [1, 11], aisleAfterRow: 4, pos: [942, 909] },
 
-    // ── パノラマラウンジ：入り方は確認中。下段コンコース東側のラウンジ入口（仮）まで案内します
+    // ── パノラマラウンジ：入り方は確認中。A41・G41ゲートを入り、横の階段11・12で5階ロビーへ
     { id: "500", group: "lounge", gate: "lounge", rows: null, pos: [854, 947], tentative: true },
     { id: "501", group: "lounge", gate: "lounge", rows: null, pos: [789, 1007], tentative: true },
     { id: "502", group: "lounge", gate: "lounge", rows: null, pos: [768, 1034], tentative: true },
@@ -427,6 +483,8 @@ window.VENUE = {
     { id: "qr-035", node: "ev12-U", place: "エレベーター1・2 4階の乗り口", tentative: true },
     { id: "qr-036", node: "ev3-U", place: "エレベーター3 4階の乗り口", tentative: true },
     { id: "qr-037", node: "ev4-U", place: "エレベーター4 4階の乗り口", tentative: true },
-    { id: "qr-038", node: "ev5-U", place: "エレベーター5 4階の乗り口", tentative: true }
+    { id: "qr-038", node: "ev5-U", place: "エレベーター5 4階の乗り口", tentative: true },
+    { id: "qr-039", node: "gate-south", place: "サウスエントランス（1階）", tentative: true },
+    { id: "qr-040", node: "ev12-G", place: "エレベーター1・2 1階の乗り口", tentative: true }
   ]
 };
