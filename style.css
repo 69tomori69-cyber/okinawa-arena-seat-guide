@@ -155,7 +155,7 @@ button.primary:active { background: var(--accent-dark); }
 .install summary { cursor: pointer; text-align: center; }
 .install ul { margin: 6px 0 0; padding-left: 1.4em; }
 
-/* ───────── 立体ビュー */
+/* ───────── 平面図 */
 .axo-head { display: flex; align-items: flex-start; gap: 8px; padding: 0 4px 6px; }
 .floor-badge {
   flex: none;
@@ -170,7 +170,7 @@ button.primary:active { background: var(--accent-dark); }
 .axo-caption { font-size: 0.95rem; font-weight: bold; line-height: 1.5; }
 .axo-wrap {
   position: relative;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 2000 / 1729;
   background: linear-gradient(#eef1f6, #f8f9fb);
   border-radius: 10px;
   overflow: hidden;
@@ -196,20 +196,6 @@ button.primary:active { background: var(--accent-dark); }
 .rail-floor.used { color: var(--navy); border-color: #b9c3d6; }
 .rail-floor.active { background: var(--navy-soft); color: #fff; }
 .rail-floor.current { background: var(--accent); color: #fff; font-weight: bold; }
-.axo-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 4px 0; }
-.axo-nav button {
-  min-width: 96px;
-  min-height: 44px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--navy);
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-}
-.axo-nav button:disabled { opacity: 0.35; cursor: default; }
-.step-count { color: var(--muted); font-size: 0.9rem; }
 
 .axo-route-all { fill: none; stroke: var(--route); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; opacity: 0.35; }
 .axo-route-halo { fill: none; stroke: #fff; stroke-width: 30; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
@@ -231,6 +217,68 @@ button.primary:active { background: var(--accent-dark); }
 .axo-label text { fill: #fff; font-size: 40px; font-weight: bold; font-family: inherit; }
 .axo-lift rect { fill: #fff; stroke: var(--navy); stroke-width: 6; }
 .axo-lift text { fill: var(--navy); font-size: 38px; font-weight: bold; font-family: inherit; }
+/* 平面図の形 */
+.fm-ground { fill: #eef1f6; }
+.fm-building { fill: #e6eaf1; stroke: #c3cbd9; stroke-width: 4; }
+.fm-bowl { fill: #dfe4ed; stroke: #c3cbd9; stroke-width: 4; }
+.fm-apron { fill: #cfd6e2; }
+.fm-court { fill: #e9c99a; stroke: #fff; stroke-width: 5; }
+.fm-court-line { stroke: #fff; stroke-width: 4; fill: none; }
+.fm-below { opacity: 0.35; }
+.fm-upper-ring { fill: #e3e8f0; stroke: #b9c3d6; stroke-width: 4; }
+.fm-lounge-area { fill: #fbeec4; stroke: #e2c770; stroke-width: 4; }
+.fm-concourse { fill: none; stroke: #ffffff; stroke-width: 34; stroke-linecap: round; stroke-linejoin: round; }
+.fm-block { stroke: #fff; stroke-width: 4; }
+.fm-block.lower { fill: #8fa8cf; }
+.fm-block.box { fill: #b48fcf; }
+.fm-block.upper { fill: #7fb6a8; }
+.fm-block.lounge { fill: #e6c35c; }
+.fm-block.selected { fill: var(--accent); }
+.fm-block-label { fill: #fff; font-size: 30px; font-weight: bold; font-family: inherit; pointer-events: none; }
+.fm-block-label.small { font-size: 20px; }
+.fm-core rect { fill: #fff; stroke: #6b7489; stroke-width: 4; }
+.fm-core text { fill: #3a4256; font-size: 26px; font-weight: bold; font-family: inherit; }
+.fm-gate { fill: #d93025; stroke: #fff; stroke-width: 5; }
+.fm-gate-label { fill: #a3201a; font-size: 26px; font-weight: bold; font-family: inherit; paint-order: stroke; stroke: #fff; stroke-width: 6; }
+.fm-climb circle { fill: var(--accent); stroke: #fff; stroke-width: 6; }
+.fm-climb text { fill: #fff; font-size: 52px; font-weight: bold; }
+
+/* 道順の手順（横にスライドするカード） */
+.step-slider {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  margin-top: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.step-slider::-webkit-scrollbar { display: none; }
+.step-card {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.step-card.seat { border-color: var(--accent); background: #fff7f4; }
+.step-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.step-num { color: var(--muted); font-size: 0.85rem; font-weight: bold; }
+.step-floor { background: var(--navy); color: #fff; font-size: 0.8rem; font-weight: bold; border-radius: 6px; padding: 0 8px; }
+.step-text { margin: 0; font-size: 1.05rem; font-weight: bold; }
+.step-sub { margin: 4px 0 0; font-size: 0.85rem; color: var(--muted); }
+.step-swipe { margin: 8px 0 0; font-size: 0.8rem; color: var(--accent-dark); }
+.step-dots { display: flex; justify-content: center; gap: 4px; padding-top: 6px; flex-wrap: wrap; }
+.step-dot {
+  width: 28px; height: 28px; padding: 0; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.step-dot::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #c3cbd9; }
+.step-dot.active::before { background: var(--accent); width: 22px; border-radius: 5px; }
+.all-steps { margin-top: 4px; }
+.all-steps summary { cursor: pointer; color: var(--navy-soft); font-size: 0.9rem; margin-bottom: 6px; }
+
 .axo-climb line { stroke: var(--accent); stroke-width: 10; stroke-dasharray: 6 18; stroke-linecap: round; animation: axo-flow 0.8s linear infinite; }
 .axo-climb path { fill: none; stroke: var(--accent); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
 .axo-climb circle { fill: var(--accent); }

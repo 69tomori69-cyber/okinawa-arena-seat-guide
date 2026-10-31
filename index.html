@@ -55,13 +55,13 @@
       </form>
     </section>
 
-    <section class="card map-card" id="axo-card" aria-label="立体図">
+    <section class="card map-card" id="axo-card" aria-label="平面図">
       <div class="axo-head">
         <span id="axo-floor" class="floor-badge">2F</span>
         <span id="axo-caption" class="axo-caption" aria-live="polite"></span>
       </div>
       <div class="axo-wrap">
-        <svg id="axo" role="img" aria-label="立体図と道順"></svg>
+        <svg id="axo" role="img" aria-label="平面図と道順"></svg>
         <div id="floor-rail" class="floor-rail" aria-hidden="true"></div>
         <div class="map-tools">
           <button type="button" id="axo-zoom-in" aria-label="拡大">＋</button>
@@ -69,11 +69,8 @@
           <button type="button" id="axo-zoom-fit" aria-label="元の表示に戻す">戻す</button>
         </div>
       </div>
-      <div class="axo-nav" id="axo-nav" hidden>
-        <button type="button" id="step-prev">◀ 前へ</button>
-        <span id="step-count" class="step-count"></span>
-        <button type="button" id="step-next">次へ ▶</button>
-      </div>
+      <div id="step-slider" class="step-slider" hidden aria-label="道順の手順（横にスライド）"></div>
+      <div id="step-dots" class="step-dots" hidden></div>
       <p class="map-hint" id="axo-hint">ブロックをタップすると選べます。2本指で拡大・縮小、ドラッグで移動できます。赤い丸は入口（ゲート）です。</p>
     </section>
 
@@ -81,8 +78,11 @@
       <h2 id="result-title">座席までの道順</h2>
       <p id="result-summary" class="summary"></p>
 
-      <ol id="steps" class="steps"></ol>
-      <p class="note">手順をタップすると、立体図でその場所を表示します。</p>
+      <details class="all-steps">
+        <summary>手順を一覧で見る</summary>
+        <ol id="steps" class="steps"></ol>
+        <p class="note">手順をタップすると、地図でその場所を表示します。</p>
+      </details>
       <p id="result-note" class="note"></p>
       <p class="note">迷ったときは、近くの柱などに貼られたQRコードを読むと、現在地を更新できます（座席番号は覚えています）。</p>
     </section>
@@ -102,7 +102,7 @@
 
   <script src="data/venue-data.js"></script>
   <script src="js/route.js"></script>
-  <script src="js/axo-view.js"></script>
+  <script src="js/floor-map.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
