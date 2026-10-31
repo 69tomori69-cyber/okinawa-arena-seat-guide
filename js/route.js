@@ -114,7 +114,8 @@
       if (a.tentative || b.tentative) tentative = true;
 
       if (leg.kind === "stairs" || leg.kind === "elevator") {
-        var up = a.floor === "L" && b.floor === "U";
+        var order = Object.keys(venue.floors);  // 階は下から順に書いてある
+        var up = order.indexOf(b.floor) > order.indexOf(a.floor);
         var how = leg.kind === "stairs" ? "階段" : "エレベーター";
         steps.push({
           kind: leg.kind,
@@ -146,7 +147,9 @@
         totalPx += runPx;
         steps.push({
           kind: "walk",
-          text: "コンコースを、客席側を" + (cw ? "右手" : "左手") + "に見ながら進み、「" + end.name + "」まで行きます。",
+          text: a.floor === "T"
+            ? "5階ロビーを進み、「" + end.name + "」まで行きます。"
+            : "コンコースを、客席側を" + (cw ? "右手" : "左手") + "に見ながら進み、「" + end.name + "」まで行きます。",
           sub: "約" + meters(venue, runPx) + "m",
           floor: a.floor,
           points: runPoints
@@ -158,7 +161,10 @@
       // ゲートや階段とコンコースの間の短い移動
       totalPx += leg.len;
       path.push(leg.to);
-      if (a.type === "gate") {
+      if (a.type === "gate" && b.type === "core") {
+        // ゲートを入ってすぐ横の階段へ（パノラマラウンジへ行くとき）
+        steps.push({ kind: "walk", text: "「" + a.name + "」から入り、すぐ横の「" + b.name.replace(/（.*）$/, "") + "」へ向かいます。", floor: a.floor, points: [a.pos, b.pos] });
+      } else if (a.type === "gate") {
         steps.push({ kind: "walk", text: a.name + "を背にして、" + floorText(venue, a.floor) + "に出ます。", floor: a.floor, points: [a.pos, b.pos] });
       } else if (a.type === "core" && i === 0) {
         steps.push({ kind: "walk", text: "「" + a.name.replace(/（.*）$/, "") + "」のそばから、" + floorText(venue, a.floor) + "に出ます。", floor: a.floor, points: [a.pos, b.pos] });

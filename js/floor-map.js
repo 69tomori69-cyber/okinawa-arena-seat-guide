@@ -13,7 +13,7 @@
   var SVG_NS = "http://www.w3.org/2000/svg";
   var W = V.mapWidth, H = V.mapHeight;
   var CENTER = V.courtCenter;
-  var FLOOR_ORDER = ["4F", "2F"];
+  var FLOOR_ORDER = ["5F", "4F", "2F"];
   var DEFAULT_LEVEL = "2F";
 
   var $ = function (id) { return document.getElementById(id); };
@@ -24,6 +24,9 @@
     rail: $("floor-rail"),
     slider: $("step-slider"),
     dots: $("step-dots"),
+    nav: $("step-nav"),
+    prev: $("step-prev"),
+    next: $("step-next"),
     hint: $("axo-hint")
   };
 
@@ -93,13 +96,17 @@
     V.nodes.forEach(function (n) {
       if (n.type !== "gate" || n.floor !== floor) return;
       el("circle", { "class": "fm-gate", cx: n.pos[0], cy: n.pos[1], r: 8 }, g);
-      var front = nodesById[n.id.replace("gate-", (floor === "L" ? "L" : "U") + "-at-")];
+      var front = null;
+      V.edges.forEach(function (e) {
+        var o = e[0] === n.id ? e[1] : e[1] === n.id ? e[0] : null;
+        if (!front && o && nodesById[o].type === "ring") front = nodesById[o];
+      });
       // ゲート名は廊下側に出す
       var dx = front ? front.pos[0] - n.pos[0] : 0, dy = front ? front.pos[1] - n.pos[1] : -1;
       var d = Math.hypot(dx, dy) || 1;
       var lx = n.pos[0] + dx / d * 24, ly = n.pos[1] + dy / d * 24 + 5;
       var t = el("text", { "class": "fm-gate-label", x: lx, y: ly, "text-anchor": "middle" }, g);
-      t.textContent = n.id.replace("gate-", "");
+      t.textContent = /^gate-lobby/.test(n.id) ? "ロビー入口" : n.id.replace("gate-", "");
     });
   }
 
@@ -379,7 +386,7 @@
 
   function hideSlider() {
     els.slider.hidden = true;
-    els.dots.hidden = true;
+    els.nav.hidden = true;
     els.slider.innerHTML = "";
     els.dots.innerHTML = "";
   }
@@ -412,7 +419,7 @@
       if (i === 0 && r.steps.length > 1) {
         var swipe = document.createElement("p");
         swipe.className = "step-swipe";
-        swipe.textContent = "← 左へスライドで次の手順";
+        swipe.textContent = "← 左へスライド、または「次へ」で次の手順";
         card.appendChild(swipe);
       }
       els.slider.appendChild(card);
@@ -424,14 +431,20 @@
       els.dots.appendChild(dot);
     });
     els.slider.hidden = false;
-    els.dots.hidden = false;
+    els.nav.hidden = false;
     els.slider.scrollLeft = 0;
   }
 
   function goTo(i) {
     var card = els.slider.children[i];
-    if (card) els.slider.scrollTo({ left: i * els.slider.clientWidth, behavior: "smooth" });
+    if (!card) return;
+    els.slider.scrollTo({ left: i * els.slider.clientWidth, behavior: "smooth" });
+    if (state.mode === "route" && i !== state.index) show(i);
   }
+
+  // 「前へ」「次へ」ボタン（スライドと同じ動き）
+  els.prev.addEventListener("click", function () { goTo(state.index - 1); });
+  els.next.addEventListener("click", function () { goTo(state.index + 1); });
 
   // スライドが止まった位置から、いま見ている手順を求める
   var scrollTimer = null;
@@ -453,6 +466,8 @@
     var level = levelOf(step.floor);
     els.caption.textContent = r.seatLabel + " まで（" + (index + 1) + " / " + r.steps.length + "）";
     Array.prototype.forEach.call(els.dots.children, function (d, i) { d.classList.toggle("active", i === index); });
+    els.prev.disabled = index === 0;
+    els.next.disabled = index === r.steps.length - 1;
     Array.prototype.forEach.call(els.slider.children, function (c, i) { c.classList.toggle("active", i === index); });
 
     if (step.kind === "stairs" || step.kind === "elevator") {

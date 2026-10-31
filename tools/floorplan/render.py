@@ -9,6 +9,8 @@ def render(n, out):
     im=load(n)
     if n<=2:  # 1F・2Fの図面は75ピクセル下にずらして、3F〜5Fと柱の位置をそろえる
         im=cv2.copyMakeBorder(im,75,0,0,0,cv2.BORDER_CONSTANT,value=(255,255,255))
+    if n==5:  # 5Fの図面は柱が左に2・上に2ピクセルずれている
+        im=cv2.warpAffine(im,np.float32([[1,0,-2],[0,1,2]]),(im.shape[1],im.shape[0]),borderValue=(255,255,255))
     x0,y0,w,h=FRAME
     im=im[y0:y0+h, x0:x0+w]
     sh=lambda pts:[(x-x0,y-y0) for x,y in pts]
@@ -66,6 +68,6 @@ def render(n, out):
     cv2.imwrite(out, comp.astype(np.uint8))
 if __name__=='__main__':
     from PIL import Image
-    for n in [2,4]:
+    for n in [2,4,5]:
         render(n,'r%d.png'%n)
         Image.open('r%d.png'%n).save('../../assets/floors/%df.webp'%n,'WEBP',quality=82,method=6)
