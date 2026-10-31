@@ -84,15 +84,7 @@
       t.textContent = b.id;
     });
 
-    // 階段・エレベーター
-    V.nodes.forEach(function (n) {
-      if (n.type !== "core" || n.floor !== floor) return;
-      var ev = /^ev/.test(n.id);
-      var gi = el("g", { "class": "fm-core" + (ev ? " ev" : ""), transform: "translate(" + n.pos[0] + "," + n.pos[1] + ")" }, g);
-      el("rect", { x: -15, y: -15, width: 30, height: 30, rx: 7 }, gi);
-      var t = el("text", { x: 0, y: 6, "text-anchor": "middle" }, gi);
-      t.textContent = ev ? "EV" : "階";
-    });
+    // 階段・エレベーターのアイコンは出さない（道順で使うときだけ、上り下りの印を出す）
 
     // 入口（ゲート）
     V.nodes.forEach(function (n) {

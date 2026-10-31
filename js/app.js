@@ -44,7 +44,7 @@
   var currentFrom = readFromParam() || "gate-main";
 
   function selectableNodes() {
-    return V.nodes.filter(function (n) { return n.type === "gate" || n.type === "core" || n.type === "lounge"; });
+    return V.nodes.filter(function (n) { return n.type === "gate" || n.type === "lounge"; });
   }
 
   function fillFromSelect() {
@@ -52,7 +52,7 @@
       { label: "1階の入口", test: function (n) { return n.type === "gate" && n.floor === "G"; } },
       { label: "2階の入口・ゲート", test: function (n) { return n.type === "gate" && n.floor === "L"; } },
       { label: "上段のゲート", test: function (n) { return n.type === "gate" && n.floor === "U"; } },
-      { label: "階段・エレベーター・ラウンジ（仮）", test: function (n) { return n.type !== "gate"; } }
+      { label: "ラウンジ（仮）", test: function (n) { return n.type !== "gate"; } }
     ];
     var nodes = selectableNodes();
     els.fromSelect.innerHTML = "";
