@@ -1,6 +1,6 @@
 /*
- * 平面図：各階を真上から見た地図を、データ（ブロック・廊下・ゲート・階段の位置）から描き、
- * その上に現在地・座席・道順を描く。
+ * 平面図：施設の図面を色分けした各階の画像（assets/floors）の上に、
+ * ブロック番号・ゲート・階段と、現在地・座席・道順を描く。
  * - 最初は現在地の階を表示し、ブロックを選ぶとその席を光らせる
  * - 道順は、地図の下のカードを指で横にスライドして1手順ずつ進む。
  *   階段・エレベーターの手順では、下の階から上の階へ移る様子をアニメーションで見せる
@@ -57,167 +57,48 @@
     return points.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
   }
 
-  // ───────── 平面図の形（座席図PDFの位置をもとにした簡略図）
-
-  // コートのまわり（ブロックの内側の線）
-  var APRON = [[740, 690], [1345, 690], [1395, 740], [1395, 1005], [1345, 1060], [740, 1060], [690, 1005], [690, 740]];
-  // 下段スタンドの外側（座席図の紺色の八角形）
-  var LOWER_OUTER = ["L-NN-W", "L-NN-E", "L-NE", "L-SE", "L-SS-E", "L-SS-W", "L-SW", "L-NW"].map(function (id) { return nodesById[id].pos; });
-  // 上段スタンドの外側
-  var UPPER_OUTER = [[580, 30], [1510, 30], [1700, 225], [1880, 420], [1880, 1310], [1700, 1500], [1510, 1705], [580, 1705], [95, 1230], [95, 520]];
-
-  // 多角形を中心に向かって縮める（rate: 0〜1）
-  function shrink(poly, amount) {
-    return poly.map(function (p) {
-      var dx = p[0] - CENTER[0], dy = p[1] - CENTER[1];
-      var d = Math.hypot(dx, dy);
-      return [p[0] - dx / d * amount, p[1] - dy / d * amount];
-    });
-  }
-
-  // 中心から角度 a の方向に伸ばした線と多角形の交点
-  function rayHit(poly, a) {
-    var dx = Math.cos(a), dy = Math.sin(a);
-    var best = null;
-    for (var i = 0; i < poly.length; i++) {
-      var p = poly[i], q = poly[(i + 1) % poly.length];
-      var ex = q[0] - p[0], ey = q[1] - p[1];
-      var den = dx * ey - dy * ex;
-      if (Math.abs(den) < 1e-9) continue;
-      var t = ((p[0] - CENTER[0]) * ey - (p[1] - CENTER[1]) * ex) / den;
-      var u = ((p[0] - CENTER[0]) * dy - (p[1] - CENTER[1]) * dx) / den;
-      if (t > 0 && u >= 0 && u <= 1 && (best === null || t < best)) best = t;
-    }
-    return [CENTER[0] + dx * best, CENTER[1] + dy * best];
-  }
-
-  function angleOf(p) { return Math.atan2(p[1] - CENTER[1], p[0] - CENTER[0]); }
-  function norm(a) { while (a <= -Math.PI) a += 2 * Math.PI; while (a > Math.PI) a -= 2 * Math.PI; return a; }
-
-  // 同じ輪の中のブロックを、中心から見た角度で区切って扇形にする
-  function sectorShapes(blocks, inner, outer, maxHalf) {
-    var list = blocks.map(function (b) { return { b: b, a: angleOf(b.pos) }; }).sort(function (x, y) { return x.a - y.a; });
-    var n = list.length;
-    var shapes = {};
-    list.forEach(function (it, i) {
-      var prev = list[(i - 1 + n) % n], next = list[(i + 1) % n];
-      var gapPrev = norm(it.a - prev.a), gapNext = norm(next.a - it.a);
-      if (n === 1) { gapPrev = gapNext = 2 * maxHalf; }
-      var a0 = it.a - Math.min(gapPrev / 2, maxHalf);
-      var a1 = it.a + Math.min(gapNext / 2, maxHalf);
-      var gap = 0.006;
-      a0 += gap; a1 -= gap;
-      var steps = 6, inPts = [], outPts = [];
-      for (var k = 0; k <= steps; k++) {
-        var a = a0 + (a1 - a0) * k / steps;
-        inPts.push(rayHit(inner, a));
-        outPts.push(rayHit(outer, a));
-      }
-      shapes[it.b.id] = inPts.concat(outPts.reverse());
-    });
-    return shapes;
-  }
-
-  var BOX_INNER = shrink(LOWER_OUTER, 75);
-  var UPPER_INNER = shrink(LOWER_OUTER, -45);
-  // 上段：客席の外側に廊下（コンコース）がある。ゲートは客席と廊下の境目
-  var UPPER_SEAT_OUT = shrink(UPPER_OUTER, 64);
-  var UPPER_CONC = shrink(UPPER_OUTER, 32);
-  var shapes = {};
-  (function buildShapes() {
-    var byGroup = function (g) { return V.blocks.filter(function (b) { return b.group === g; }); };
-    Object.assign(shapes, sectorShapes(byGroup("lower"), APRON, BOX_INNER, 0.16));
-    Object.assign(shapes, sectorShapes(byGroup("box"), BOX_INNER, shrink(LOWER_OUTER, 6), 0.045));
-    Object.assign(shapes, sectorShapes(byGroup("upper"), UPPER_INNER, UPPER_SEAT_OUT, 0.13));
-    byGroup("lounge").forEach(function (b) {
-      var x = b.pos[0], y = b.pos[1];
-      shapes[b.id] = [[x - 28, y - 34], [x + 28, y - 34], [x + 28, y + 34], [x - 28, y + 34]];
-    });
-  })();
-
-  // 4Fの廊下・ゲート・階段は、データの位置から中心と反対向きにずらして、客席の外側に描く
-  var upperNodeAt = {};
-  V.nodes.forEach(function (n) { if (n.floor === "U") upperNodeAt[n.pos.join(",")] = n; });
-  function place(p, level) {
-    if (level !== "4F") return p;
-    var n = upperNodeAt[p.join(",")];
-    if (!n) return p;
-    return rayHit(n.type === "gate" ? UPPER_SEAT_OUT : UPPER_CONC, angleOf(p));
-  }
-  function placeAll(points, level) { return points.map(function (p) { return place(p, level); }); }
-
-  // ブロック番号の位置（上段は帯の真ん中）
-  function labelPos(b) {
-    if (b.group !== "upper") return b.pos;
-    var a = angleOf(b.pos), i = rayHit(UPPER_INNER, a), o = rayHit(UPPER_SEAT_OUT, a);
-    return [(i[0] + o[0]) / 2, (i[1] + o[1]) / 2];
-  }
-
-  // 廊下（コンコース）の線：通路データの walk のうち、廊下どうしをつなぐもの
-  function concourseLines(floor) {
-    return V.edges.filter(function (e) {
-      var a = nodesById[e[0]], b = nodesById[e[1]];
-      return (e[2] || "walk") === "walk" && a.floor === floor && b.floor === floor;
-    }).map(function (e) { return [nodesById[e[0]].pos, nodesById[e[1]].pos]; });
-  }
+  // ───────── 平面図（施設の図面を色分けした画像）の上に、ブロック番号・ゲート・階段を重ねる
 
   var levelFloor = {};
   Object.keys(V.floors).forEach(function (f) { levelFloor[V.floors[f].axo] = f; });
 
   function drawBase(g, level) {
     var floor = levelFloor[level];
-    var upper = level === "4F";
-    el("rect", { "class": "fm-ground", x: -400, y: -400, width: W + 800, height: H + 800 }, g);
-    el("polygon", { "class": "fm-building", points: pts(UPPER_OUTER) }, g);
+    el("image", { href: V.floorImages[level], x: 0, y: 0, width: W, height: H, preserveAspectRatio: "none" }, g);
 
-    // 上の階では、下段スタンドとコートは「吹き抜けの下」としてうすく描く
-    var lowerG = el("g", { "class": upper ? "fm-below" : "" }, g);
-    el("polygon", { "class": "fm-bowl", points: pts(LOWER_OUTER) }, lowerG);
-    el("polygon", { "class": "fm-apron", points: pts(APRON) }, lowerG);
-    el("rect", { "class": "fm-court", x: 792, y: 740, width: 500, height: 267, rx: 6 }, lowerG);
-    el("line", { "class": "fm-court-line", x1: 1042, y1: 740, x2: 1042, y2: 1007 }, lowerG);
-    el("circle", { "class": "fm-court-line", cx: 1042, cy: 873, r: 45, fill: "none" }, lowerG);
-
-    if (upper) {
-      el("polygon", { "class": "fm-upper-ring", points: pts(UPPER_OUTER) + " " + pts(UPPER_INNER.slice().reverse()), "fill-rule": "evenodd" }, g);
-    } else {
-      // パノラマラウンジ（2F・東側）
-      el("rect", { "class": "fm-lounge-area", x: 1815, y: 400, width: 140, height: 960, rx: 18 }, g);
-    }
-
-    // 廊下
-    var lines = concourseLines(floor);
-    lines.forEach(function (l) { el("path", { "class": "fm-concourse", d: pathD(placeAll(l, level)) }, g); });
-
-    // ブロック
+    // ブロック番号（選んだブロックは色を変える）
     V.blocks.forEach(function (b) {
-      if (blockLevel(b) !== level || !shapes[b.id]) return;
+      if (blockLevel(b) !== level) return;
       var sel = state.block && state.block.id === b.id && state.mode !== "here";
-      el("polygon", { "class": "fm-block " + b.group + (sel ? " selected" : ""), points: pts(shapes[b.id]), "data-block": b.id }, g);
-      var lp = labelPos(b);
-      var t = el("text", { "class": "fm-block-label" + (b.group === "box" || b.group === "lounge" ? " small" : ""), x: lp[0], y: lp[1] + 9, "text-anchor": "middle" }, g);
+      // ボックス席（3階の部屋）はゲートの壁に重なるので、選んだときだけ出す
+      if (b.group === "box" && !sel) return;
+      var small = b.group === "box" || b.group === "lounge";
+      var gl = el("g", { "class": "fm-block-tag " + b.group + (sel ? " selected" : ""), transform: "translate(" + b.pos[0] + "," + b.pos[1] + ")" }, g);
+      el("rect", { x: small ? -16 : -21, y: -10, width: small ? 32 : 42, height: 20, rx: 6 }, gl);
+      var t = el("text", { x: 0, y: 6, "text-anchor": "middle" }, gl);
       t.textContent = b.id;
     });
 
     // 階段・エレベーター
     V.nodes.forEach(function (n) {
       if (n.type !== "core" || n.floor !== floor) return;
-      var cp = place(n.pos, level);
-      var gi = el("g", { "class": "fm-core", transform: "translate(" + cp[0] + "," + cp[1] + ")" }, g);
-      el("rect", { x: -26, y: -26, width: 52, height: 52, rx: 10 }, gi);
-      var hasEv = V.edges.some(function (e) { return e[2] === "elevator" && (e[0] === n.id || e[1] === n.id); });
-      var t = el("text", { x: 0, y: 10, "text-anchor": "middle" }, gi);
-      t.textContent = hasEv ? "EV" : "階";
+      var ev = /^ev/.test(n.id);
+      var gi = el("g", { "class": "fm-core" + (ev ? " ev" : ""), transform: "translate(" + n.pos[0] + "," + n.pos[1] + ")" }, g);
+      el("rect", { x: -15, y: -15, width: 30, height: 30, rx: 7 }, gi);
+      var t = el("text", { x: 0, y: 6, "text-anchor": "middle" }, gi);
+      t.textContent = ev ? "EV" : "階";
     });
 
     // 入口（ゲート）
     V.nodes.forEach(function (n) {
       if (n.type !== "gate" || n.floor !== floor) return;
-      var gp = place(n.pos, level);
-      el("circle", { "class": "fm-gate", cx: gp[0], cy: gp[1], r: 15 }, g);
-      // 上段のゲート名は廊下側（外側）に出す
-      var lp = upper ? rayHit(shrink(UPPER_OUTER, 4), angleOf(gp)) : [gp[0], gp[1] - 14];
-      var t = el("text", { "class": "fm-gate-label", x: lp[0], y: lp[1] - 10, "text-anchor": "middle" }, g);
+      el("circle", { "class": "fm-gate", cx: n.pos[0], cy: n.pos[1], r: 8 }, g);
+      var front = nodesById[n.id.replace("gate-", (floor === "L" ? "L" : "U") + "-at-")];
+      // ゲート名は廊下側に出す
+      var dx = front ? front.pos[0] - n.pos[0] : 0, dy = front ? front.pos[1] - n.pos[1] : -1;
+      var d = Math.hypot(dx, dy) || 1;
+      var lx = n.pos[0] + dx / d * 24, ly = n.pos[1] + dy / d * 24 + 5;
+      var t = el("text", { "class": "fm-gate-label", x: lx, y: ly, "text-anchor": "middle" }, g);
       t.textContent = n.id.replace("gate-", "");
     });
   }
@@ -258,7 +139,7 @@
   function fitTo(points, minW) {
     var xs = points.map(function (p) { return p[0]; });
     var ys = points.map(function (p) { return p[1]; });
-    var pad = 160;
+    var pad = 70;
     var x0 = Math.min.apply(null, xs) - pad, x1 = Math.max.apply(null, xs) + pad;
     var y0 = Math.min.apply(null, ys) - pad, y1 = Math.max.apply(null, ys) + pad;
     var ratio = W / H;
@@ -340,7 +221,7 @@
   function onTap(clientX, clientY) {
     if (!state.onBlockTap || !state.shownLevel) return;
     var p = svgPoint(clientX, clientY);
-    var tolerance = Math.max(50, 30 / p[2]);
+    var tolerance = Math.max(28, 30 / p[2]);
     var best = null, bestD = Infinity;
     V.blocks.forEach(function (b) {
       if (blockLevel(b) !== state.shownLevel) return;
@@ -348,6 +229,17 @@
       if (d < bestD) { best = b; bestD = d; }
     });
     if (best && bestD <= tolerance) state.onBlockTap(best);
+  }
+
+  // 階段・エレベーターは階ごとに少し位置が違うので、その階で一番近いものの位置を使う
+  function nearestCore(p, level) {
+    var best = p, bestD = Infinity;
+    V.nodes.forEach(function (n) {
+      if (n.type !== "core" || levelOf(n.floor) !== level) return;
+      var d = Math.hypot(n.pos[0] - p[0], n.pos[1] - p[1]);
+      if (d < bestD) { bestD = d; best = n.pos; }
+    });
+    return best;
   }
 
   // ───────── 1つの階の地図と、その上の印
@@ -362,12 +254,12 @@
       // この階を通る道順全体（うすく）
       r.steps.forEach(function (s) {
         if (s.points.length < 2 || levelOf(s.floor) !== level) return;
-        el("path", { "class": "axo-route-all", d: pathD(placeAll(s.points, level)) }, g);
+        el("path", { "class": "axo-route-all", d: pathD(s.points) }, g);
       });
       // いまの手順（太く、流れる線）
       var step = opts.step;
       if (step && levelOf(step.floor) === level && step.points.length > 1) {
-        var d2 = pathD(placeAll(step.points, level));
+        var d2 = pathD(step.points);
         el("path", { "class": "axo-route-halo", d: d2 }, g);
         el("path", { "class": "axo-route", d: d2 }, g);
         el("path", { "class": "axo-route-flow", d: d2 }, g);
@@ -376,10 +268,10 @@
       r.steps.forEach(function (st) {
         if (st.kind !== "stairs" && st.kind !== "elevator") return;
         if (levelOf(st.floor) !== level && levelOf(st.toFloor) !== level) return;
-        var p = place(st.points[0], level);
+        var p = nearestCore(st.points[0], level);
         var gi = el("g", { "class": "axo-lift", transform: "translate(" + p[0] + "," + p[1] + ")" }, g);
-        el("rect", { x: -32, y: -32, width: 64, height: 64, rx: 12 }, gi);
-        var t = el("text", { x: 0, y: 12, "text-anchor": "middle" }, gi);
+        el("rect", { x: -17, y: -17, width: 34, height: 34, rx: 7 }, gi);
+        var t = el("text", { x: 0, y: 7, "text-anchor": "middle" }, gi);
         t.textContent = st.kind === "stairs" ? "階" : "EV";
       });
     }
@@ -388,9 +280,9 @@
     if (state.from) {
       var here = nodesById[state.from];
       if (levelOf(here.floor) === level) {
-        var h = place(here.pos, level);
-        el("circle", { "class": "axo-here-pulse", cx: h[0], cy: h[1], r: 40 }, g);
-        el("circle", { "class": "axo-here", cx: h[0], cy: h[1], r: 17 }, g);
+        var h = here.pos;
+        el("circle", { "class": "axo-here-pulse", cx: h[0], cy: h[1], r: 20 }, g);
+        el("circle", { "class": "axo-here", cx: h[0], cy: h[1], r: 9 }, g);
         label(g, h, "現在地", "here");
       }
     }
@@ -398,19 +290,19 @@
     // 座席（選んだブロック）
     if (state.block && blockLevel(state.block) === level && state.mode !== "here") {
       var s = state.block.pos;
-      el("circle", { "class": "axo-seat-glow", cx: s[0], cy: s[1], r: 60 }, g);
-      el("path", { "class": "axo-seat", d: "M0 0 C -9 -20 -26 -29 -26 -46 A 26 26 0 1 1 26 -46 C 26 -29 9 -20 0 0 Z", transform: "translate(" + s[0] + "," + s[1] + ")" }, g);
+      el("circle", { "class": "axo-seat-glow", cx: s[0], cy: s[1], r: 30 }, g);
+      el("path", { "class": "axo-seat", d: "M0 0 C -9 -20 -26 -29 -26 -46 A 26 26 0 1 1 26 -46 C 26 -29 9 -20 0 0 Z", transform: "translate(" + s[0] + "," + s[1] + ") scale(0.55)" }, g);
       label(g, s, state.block.id + "ブロック", "seat");
     }
     return g;
   }
 
   function label(parent, pos, text, kind) {
-    var w = text.length * 30 + 24;
-    var y = kind === "seat" ? pos[1] + 24 : pos[1] - 86;
+    var w = text.length * 15 + 12;
+    var y = kind === "seat" ? pos[1] + 12 : pos[1] - 44;
     var g = el("g", { "class": "axo-label " + kind }, parent);
-    el("rect", { x: pos[0] - w / 2, y: y, width: w, height: 48, rx: 11 }, g);
-    var t = el("text", { x: pos[0], y: y + 35, "text-anchor": "middle" }, g);
+    el("rect", { x: pos[0] - w / 2, y: y, width: w, height: 24, rx: 6 }, g);
+    var t = el("text", { x: pos[0], y: y + 18, "text-anchor": "middle" }, g);
     t.textContent = text;
   }
 
@@ -458,7 +350,7 @@
     if (fromId) {
       var n = nodesById[fromId];
       els.caption.textContent = "現在地：" + n.name.replace(/（.*）$/, "");
-      fitTo([n.pos], 1150);
+      fitTo([n.pos], 600);
     } else {
       els.caption.textContent = "QRコードを読むか、現在地を選ぶと、ここに表示します。";
       fitTo([[0, 0], [W, H]], W);
@@ -479,7 +371,7 @@
     els.caption.textContent = block.id + "ブロックはここです。";
     var p = [block.pos];
     if (fromId && levelOf(nodesById[fromId].floor) === level) p.push(nodesById[fromId].pos);
-    fitTo(p, 1000);
+    fitTo(p, 520);
     setHint("");
   }
 
@@ -573,21 +465,21 @@
       drawLevel(stage, fromLv, { step: step, className: "from" });
       drawLevel(stage, toLv, { step: step, className: "to" });
       var p = step.points[0];
-      var arrow = el("g", { "class": "fm-climb", transform: "translate(" + p[0] + "," + (p[1] - 60) + ")" }, stage);
-      el("circle", { r: 46 }, arrow);
-      var t = el("text", { y: 16, "text-anchor": "middle" }, arrow);
+      var arrow = el("g", { "class": "fm-climb", transform: "translate(" + p[0] + "," + (p[1] - 34) + ")" }, stage);
+      el("circle", { r: 24 }, arrow);
+      var t = el("text", { y: 9, "text-anchor": "middle" }, arrow);
       t.textContent = up ? "↑" : "↓";
       els.badge.textContent = fromLv + " → " + toLv;
       renderRail([fromLv, toLv], toLv);
-      fitTo([p], 1000);
+      fitTo([p], 560);
       state.shownLevel = toLv;
       return;
     }
 
     showSingle(level, step);
-    var pp = placeAll(step.points, level);
+    var pp = step.points.slice();
     if (step.kind === "seat") pp.push(state.block.pos);
-    fitTo(pp, 850);
+    fitTo(pp, 460);
   }
 
   function render(result, block) {
