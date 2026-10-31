@@ -1,5 +1,5 @@
 /*
- * 画面の動き：現在地の表示、座席番号の入力、立体図の上へのルート表示
+ * 画面の動き：現在地の表示、座席番号の入力、平面図の上へのルート表示
  */
 (function () {
   "use strict";
@@ -128,7 +128,7 @@
     return { block: b, seat: { row: row, number: num } };
   }
 
-  // ───────── 立体図での表示
+  // ───────── 平面図での表示
 
   var Axo = window.AxoView;
 
@@ -136,13 +136,13 @@
     Axo.showHere(currentFrom);
   }
 
-  // ルートを出す前に、選んだブロックを立体図の上で光らせる
+  // ルートを出す前に、選んだブロックを平面図の上で光らせる
   function previewBlock(block) {
     els.result.hidden = true;
     Axo.preview(block, currentFrom);
   }
 
-  // 立体図でブロックをタップしたとき
+  // 平面図でブロックをタップしたとき
   function onBlockTap(block) {
     els.block.value = block.id;
     fillRows();
@@ -155,8 +155,12 @@
   function showResult(r) {
     els.summary.textContent = r.seatLabel + " まで、約" + r.totalMeters + "m（歩いて約" + r.minutes + "分）";
     els.steps.innerHTML = "";
-    r.steps.forEach(function (s) {
+    r.steps.forEach(function (s, i) {
       var li = document.createElement("li");
+      li.addEventListener("click", function () {
+        Axo.goTo(i);
+        document.getElementById("axo-card").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       if (s.kind === "seat") li.className = "seat-step";
       li.appendChild(document.createTextNode(s.text));
       if (s.sub) {

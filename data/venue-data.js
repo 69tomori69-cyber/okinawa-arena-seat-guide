@@ -2,7 +2,7 @@
  * 沖縄サントリーアリーナ 座席案内 データ
  *
  * 座標は、座席図PDF（2027-28 最新版）を横2000×縦1729の画像にしたときの位置です。左上が (0, 0)。
- * 画面には座席図を出さず、この座標を立体図（axo）の位置に変換して使います。
+ * 画面には座席図を出さず、この座標から各階の平面図を描きます（js/floor-map.js）。
  * 「tentative: true」が付いているものは仮の値です。現地調査やフロアマップで
  * 確認できたら、値を直して tentative を消してください。
  * 一覧は docs/provisional.md にもまとめています。
@@ -15,36 +15,9 @@ window.VENUE = {
   courtCenter: [1000, 865],
 
   floors: {
-    // axo: 立体図（assets/floors）のどの階の絵に描くか
+    // axo: 平面図で何階として表示するか
     L: { name: "下段コンコース", floorLabel: "2階", axo: "2F", tentative: true },
     U: { name: "上段コンコース", floorLabel: "4階", axo: "4F", tentative: true }
-  },
-
-  /*
-   * 立体図（各階を斜め上から見た絵）
-   * 座席図の位置 (x, y) を立体図の位置に変換する式：
-   *   横 = a*x + b*y + c,  縦 = d*x + e*y + f - lift
-   * a〜f はコートの四隅を座席図と立体図で合わせて求めた値。
-   * lift は床の高さの分だけ上にずらす量（2Fは廊下の壁が座席図と重なるように合わせた。3F・5Fは仮）。
-   * 4Fは遠近感の影響が大きく上の式では奥（北側）がずれるため、上段ゲートの位置を7か所合わせた
-   * 射影変換（homography：3×3の行列）を使う。
-   */
-  axo: {
-    width: 3000,
-    height: 2000,
-    matrix: [0.981, 0.48876, 84.61, -0.267, 0.64981, 717.35],
-    levels: {
-      "1F": { image: "assets/floors/1f.webp", lift: 0 },
-      "2F": { image: "assets/floors/2f.webp", lift: 120 },
-      "3F": { image: "assets/floors/3f.webp", lift: 220, tentative: true },
-      "4F": {
-        image: "assets/floors/4f.webp",
-        lift: 320,
-        homography: [0.55359355, 0.15003183, 475.55163789, -0.22536235, 0.46585333, 543.94815458, -0.00024137, 0.00007773, 1],
-        tentative: true
-      },
-      "5F": { image: "assets/floors/5f.webp", lift: 420, tentative: true }
-    }
   },
 
   /*
@@ -88,7 +61,7 @@ window.VENUE = {
     { id: "L-SS-W", name: "下段コンコース 南西", floor: "L", pos: [648, 1490], type: "ring", tentative: true },
     { id: "L-SW", name: "下段コンコース 南西の角", floor: "L", pos: [303, 1150], type: "ring", tentative: true },
     { id: "L-E", name: "下段コンコース 東", floor: "L", pos: [1793, 870], type: "ring", tentative: true },
-    // パノラマラウンジ：2Fの立体図で、座席図の500番台が黄色いラウンジの位置に重なるため下段の階に置いた
+    // パノラマラウンジ：座席図の500番台は2Fの東側にあるため下段の階に置いた
     { id: "lounge", name: "パノラマラウンジ入口", floor: "L", pos: [1850, 870], type: "lounge", tentative: true },
     // 各ゲートの前（コンコース上）
     { id: "L-at-A21", name: "A21ゲート前", floor: "L", pos: [1645, 1374], type: "ring", tentative: true },
@@ -103,7 +76,7 @@ window.VENUE = {
     { id: "L-at-G21", name: "G21ゲート前", floor: "L", pos: [1636, 437], type: "ring", tentative: true },
 
     // ── 上段コンコース（仮）：上段ゲートの並び（4列と5列の間の横通路の高さ）に沿わせた仮の通路。
-    //    4Fの立体図では、上段スタンドの外側は建物の外になるため
+    //    平面図では、客席の外側の廊下に寄せて描きます
     { id: "U-NW", name: "上段コンコース 北西の角", floor: "U", pos: [195, 560], type: "ring", tentative: true },
     { id: "U-NN-W", name: "上段コンコース 北西", floor: "U", pos: [640, 140], type: "ring", tentative: true },
     { id: "U-NN-E", name: "上段コンコース 北東", floor: "U", pos: [1450, 140], type: "ring", tentative: true },
