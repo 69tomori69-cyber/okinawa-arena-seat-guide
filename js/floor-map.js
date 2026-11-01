@@ -69,14 +69,24 @@
     var floor = levelFloor[level];
     el("image", { href: V.floorImages[level], x: 0, y: 0, width: W, height: H, preserveAspectRatio: "none" }, g);
 
+    // 通路（歩く道）を、白い帯で目立たせる。道順の線はこの帯の上だけを通る
+    var nodeById = {};
+    V.nodes.forEach(function (n) { nodeById[n.id] = n; });
+    var walks = V.edges.filter(function (e) {
+      var a = nodeById[e[0]], b = nodeById[e[1]];
+      return (e[2] || "walk") === "walk" && a.floor === floor && b.floor === floor;
+    }).map(function (e) { return pathD(window.SeatRoute.edgePoints(V, nodeById[e[0]], nodeById[e[1]])); });
+    var wg = el("g", { "class": "fm-walkway" }, g);
+    walks.forEach(function (d) { el("path", { "class": "fm-walk-edge", d: d }, wg); });
+    walks.forEach(function (d) { el("path", { "class": "fm-walk", d: d }, wg); });
+
     // ブロック番号（選んだブロックは色を変える）
     V.blocks.forEach(function (b) {
       if (blockLevel(b) !== level) return;
       var sel = state.block && state.block.id === b.id && state.mode !== "here";
       // ボックス席（3階の部屋）はゲートの壁に重なるので、選んだときだけ出す
-      // 201A などの区画も細かく並んでいるので、選んだときだけ出す
-      if ((b.group === "box" || b.group === "sub") && !sel) return;
-      var small = b.group === "box" || b.group === "lounge" || b.group === "sub" || b.group === "court";
+      if (b.group === "box" && !sel) return;
+      var small = b.group === "box" || b.group === "lounge" || b.group === "court";
       var w = Math.max(small ? 32 : 42, b.id.length * 8 + 12);
       var gl = el("g", { "class": "fm-block-tag " + b.group + (sel ? " selected" : ""), transform: "translate(" + b.pos[0] + "," + b.pos[1] + ")" }, g);
       el("rect", { x: -w / 2, y: -10, width: w, height: 20, rx: 6 }, gl);
@@ -100,7 +110,7 @@
       var d = Math.hypot(dx, dy) || 1;
       var lx = n.pos[0] + dx / d * 24, ly = n.pos[1] + dy / d * 24 + 5;
       var t = el("text", { "class": "fm-gate-label", x: lx, y: ly, "text-anchor": "middle" }, g);
-      t.textContent = /^gate-lobby/.test(n.id) ? "ロビー入口" : n.id === "gate-south" ? "サウス" : n.id === "gate-main" ? "メイン入口" : n.id === "gate-floor" ? "フロア入口" : n.id.replace("gate-", "");
+      t.textContent = /^gate-lobby/.test(n.id) ? "ロビー入口" : n.id === "gate-south" ? "サウス" : n.id === "gate-main" ? "メイン入口" : n.id === "gate-floor" ? "フロア入口" : /^gate-st/.test(n.id) ? "階段" : n.id.replace("gate-", "");
     });
   }
 
@@ -319,6 +329,8 @@
     }
     els.rail.innerHTML = "";
     FLOOR_ORDER.forEach(function (lv) {
+      // 1階はコートサイド席の人だけが使うので、道順で通るときだけ出す
+      if (lv === "1F" && !used[lv] && lv !== current && activeLevels.indexOf(lv) < 0) return;
       var d = document.createElement("div");
       d.className = "rail-floor" + (used[lv] ? " used" : "") + (activeLevels.indexOf(lv) >= 0 ? " active" : "") + (lv === current ? " current" : "");
       d.textContent = lv;
