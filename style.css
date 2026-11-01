@@ -218,6 +218,9 @@ button.primary:active { background: var(--accent-dark); }
 .axo-lift rect { fill: #fff; stroke: var(--accent); stroke-width: 4; }
 .axo-lift text { fill: var(--accent-dark); font-size: 18px; font-weight: bold; font-family: inherit; }
 /* 平面図の上の印 */
+.fm-walkway path { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.fm-walk-edge { stroke: #9fb3cc; stroke-width: 30; opacity: 0.55; }
+.fm-walk { stroke: #fdfcf7; stroke-width: 24; opacity: 0.92; }
 .fm-block-tag rect { fill: rgba(255, 255, 255, 0.9); stroke: #14284b; stroke-width: 1.5; }
 .fm-block-tag text { fill: #14284b; font-size: 13px; font-weight: bold; font-family: inherit; }
 .fm-block-tag.box text, .fm-block-tag.lounge text, .fm-block-tag.sub text, .fm-block-tag.court text { font-size: 11px; }

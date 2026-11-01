@@ -69,6 +69,17 @@
     var floor = levelFloor[level];
     el("image", { href: V.floorImages[level], x: 0, y: 0, width: W, height: H, preserveAspectRatio: "none" }, g);
 
+    // 通路（歩く道）を、白い帯で目立たせる。道順の線はこの帯の上だけを通る
+    var nodeById = {};
+    V.nodes.forEach(function (n) { nodeById[n.id] = n; });
+    var walks = V.edges.filter(function (e) {
+      var a = nodeById[e[0]], b = nodeById[e[1]];
+      return (e[2] || "walk") === "walk" && a.floor === floor && b.floor === floor;
+    }).map(function (e) { return pathD(window.SeatRoute.edgePoints(V, nodeById[e[0]], nodeById[e[1]])); });
+    var wg = el("g", { "class": "fm-walkway" }, g);
+    walks.forEach(function (d) { el("path", { "class": "fm-walk-edge", d: d }, wg); });
+    walks.forEach(function (d) { el("path", { "class": "fm-walk", d: d }, wg); });
+
     // ブロック番号（選んだブロックは色を変える）
     V.blocks.forEach(function (b) {
       if (blockLevel(b) !== level) return;
@@ -99,7 +110,7 @@
       var d = Math.hypot(dx, dy) || 1;
       var lx = n.pos[0] + dx / d * 24, ly = n.pos[1] + dy / d * 24 + 5;
       var t = el("text", { "class": "fm-gate-label", x: lx, y: ly, "text-anchor": "middle" }, g);
-      t.textContent = /^gate-lobby/.test(n.id) ? "ロビー入口" : n.id === "gate-south" ? "サウス" : n.id === "gate-main" ? "メイン入口" : n.id === "gate-floor" ? "フロア入口" : n.id.replace("gate-", "");
+      t.textContent = /^gate-lobby/.test(n.id) ? "ロビー入口" : n.id === "gate-south" ? "サウス" : n.id === "gate-main" ? "メイン入口" : n.id === "gate-floor" ? "フロア入口" : /^gate-st/.test(n.id) ? "階段" : n.id.replace("gate-", "");
     });
   }
 

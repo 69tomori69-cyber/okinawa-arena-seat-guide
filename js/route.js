@@ -16,6 +16,20 @@
     return Math.sqrt(dx * dx + dy * dy);
   }
 
+  function polyLen(pts) {
+    var s = 0;
+    for (var i = 1; i < pts.length; i++) s += dist(pts[i - 1], pts[i]);
+    return s;
+  }
+
+  // 2つの地点のあいだの通路の線（平面図から作ったものがあればそれを使う。なければ直線）
+  function edgePoints(venue, a, b) {
+    var P = venue.edgePaths || {};
+    if (P[a.id + "|" + b.id]) return P[a.id + "|" + b.id];
+    if (P[b.id + "|" + a.id]) return P[b.id + "|" + a.id].slice().reverse();
+    return [a.pos, b.pos];
+  }
+
   function buildGraph(venue) {
     var nodes = {};
     venue.nodes.forEach(function (n) { nodes[n.id] = n; });
@@ -26,10 +40,11 @@
       var b = nodes[e[1]];
       if (!a || !b) throw new Error("通路データに存在しない地点があります: " + e[0] + " - " + e[1]);
       var kind = e[2] || "walk";
-      var len = dist(a.pos, b.pos);
+      var pts = kind === "walk" ? edgePoints(venue, a, b) : [a.pos, b.pos];
+      var len = kind === "walk" ? polyLen(pts) : dist(a.pos, b.pos);
       var cost = len + (kind === "stairs" ? STAIRS_COST_PX : kind === "elevator" ? ELEVATOR_COST_PX : 0);
-      adj[a.id].push({ to: b.id, kind: kind, len: len, cost: cost });
-      adj[b.id].push({ to: a.id, kind: kind, len: len, cost: cost });
+      adj[a.id].push({ to: b.id, kind: kind, len: len, cost: cost, pts: pts });
+      adj[b.id].push({ to: a.id, kind: kind, len: len, cost: cost, pts: pts.slice().reverse() });
     });
     return { nodes: nodes, adj: adj };
   }
@@ -68,7 +83,7 @@
     var at = toId;
     while (at !== fromId) {
       var p = prev[at];
-      legs.unshift({ from: p.from, to: at, kind: p.edge.kind, len: p.edge.len });
+      legs.unshift({ from: p.from, to: at, kind: p.edge.kind, len: p.edge.len, pts: p.edge.pts });
       at = p.from;
     }
     return legs;
@@ -98,6 +113,11 @@
    */
   function describe(venue, graph, fromId, block, seat, options) {
     var nodes = graph.nodes;
+    // コートサイド席は、アリーナフロアの外周のうち席に一番近い所まで通路を通って行き、そこから席へ向かう
+    if (block.gates) {
+      var near = block.gates.slice().sort(function (p, q) { return dist(nodes[p].pos, block.pos) - dist(nodes[q].pos, block.pos); })[0];
+      block = Object.assign({}, block, { gate: near });
+    }
     var legs = shortestPath(graph, fromId, block.gate, options);
     if (!legs) return null;
 
@@ -117,9 +137,10 @@
         var order = Object.keys(venue.floors);  // 階は下から順に書いてある
         var up = order.indexOf(b.floor) > order.indexOf(a.floor);
         var how = leg.kind === "stairs" ? "階段" : "エレベーター";
+        var where = /^gate-st/.test(b.id) ? "1階のアリーナフロア" : floorText(venue, b.floor);
         steps.push({
           kind: leg.kind,
-          text: how + "で" + floorText(venue, b.floor) + "へ" + (up ? "上がります" : "下ります") + "。",
+          text: how + "で" + where + "へ" + (up ? "上がります" : "下ります") + "。",
           floor: a.floor,
           toFloor: b.floor,
           points: [a.pos]
@@ -139,7 +160,7 @@
           runPx += legs[j].len;
           if (nodes[legs[j].to].tentative) tentative = true;
           path.push(legs[j].to);
-          runPoints.push(nodes[legs[j].to].pos);
+          runPoints = runPoints.concat(legs[j].pts.slice(1));
           j++;
         }
         var end = nodes[legs[j - 1].to];
@@ -149,6 +170,8 @@
           kind: "walk",
           text: a.floor === "T"
             ? "5階ロビーを進み、「" + end.name + "」まで行きます。"
+            : a.floor === "G" && /^G-ar/.test(end.id)
+            ? "アリーナフロアを進み、「" + end.name + "」まで行きます。"
             : a.floor === "G"
             ? "1階の通路を進み、「" + end.name + "」まで行きます。"
             : "コンコースを、客席側を" + (cw ? "右手" : "左手") + "に見ながら進み、「" + end.name + "」まで行きます。",
@@ -163,15 +186,20 @@
       // ゲートや階段とコンコースの間の短い移動
       totalPx += leg.len;
       path.push(leg.to);
-      if (a.type === "gate" && b.type === "core") {
+      if (a.type === "gate" && b.type === "core" && /^st2\d\d-/.test(b.id)) {
+        // ゲートから客席に入り、コート側の階段へ（1階のアリーナフロアへ行くとき）
+        steps.push({ kind: "walk", text: "「" + a.name + "」から客席に入り、客席の通路をコート側へ下りて「" + b.name + "」へ向かいます。", floor: a.floor, points: leg.pts });
+      } else if (a.type === "gate" && b.type === "core") {
         // ゲートを入ってすぐ横の階段へ（パノラマラウンジへ行くとき）
-        steps.push({ kind: "walk", text: "「" + a.name + "」から入り、すぐ横の「" + b.name.replace(/（.*）$/, "") + "」へ向かいます。", floor: a.floor, points: [a.pos, b.pos] });
+        steps.push({ kind: "walk", text: "「" + a.name + "」から入り、すぐ横の「" + b.name.replace(/（.*）$/, "") + "」へ向かいます。", floor: a.floor, points: leg.pts });
+      } else if (a.type === "gate" && i > 0) {
+        steps.push({ kind: "walk", text: "「" + a.name + "」から、" + (a.floor === "G" ? "アリーナフロアを進みます。" : "先へ進みます。"), floor: a.floor, points: leg.pts });
       } else if (a.type === "gate") {
-        steps.push({ kind: "walk", text: a.name + "を背にして、" + floorText(venue, a.floor) + "に出ます。", floor: a.floor, points: [a.pos, b.pos] });
+        steps.push({ kind: "walk", text: a.name + "を背にして、" + floorText(venue, a.floor) + "に出ます。", floor: a.floor, points: leg.pts });
       } else if (a.type === "core" && i === 0) {
-        steps.push({ kind: "walk", text: "「" + a.name.replace(/（.*）$/, "") + "」のそばから、" + floorText(venue, a.floor) + "に出ます。", floor: a.floor, points: [a.pos, b.pos] });
+        steps.push({ kind: "walk", text: "「" + a.name.replace(/（.*）$/, "") + "」のそばから、" + floorText(venue, a.floor) + "に出ます。", floor: a.floor, points: leg.pts });
       } else if (b.type === "core") {
-        steps.push({ kind: "walk", text: "「" + b.name.replace(/（.*）$/, "") + "」へ向かいます。", floor: b.floor, points: [a.pos, b.pos] });
+        steps.push({ kind: "walk", text: "「" + b.name.replace(/（.*）$/, "") + "」へ向かいます。", floor: b.floor, points: leg.pts });
       } else if (b.type === "gate") {
         // 最後のゲートへの一歩は下の「ゲートから座席へ」でまとめて案内する
       }
@@ -195,7 +223,7 @@
     } else if (block.group === "court") {
       steps.push({
         kind: "seat",
-        text: gate.name + "からアリーナフロアに入り、コートサイドの「" + block.id + "」の席へ。",
+        text: "「" + gate.name + "」から、コートサイドの「" + block.id + "」の席へ。",
         sub: "コートサイド席はサウスエントランスからの入場です。フロアでの入り方は確認中なので、スタッフにチケットをお見せください。"
       });
     } else if (block.group === "box") {
@@ -226,10 +254,11 @@
     totalPx += dist(gate.pos, block.pos);
 
     // ゲートから座席までの手順には、地図に描くための位置を付ける
-    var before = legs.length ? nodes[legs[legs.length - 1].from].pos : gate.pos;
+    var last = legs.length ? legs[legs.length - 1] : null;
+    var before = last && last.kind === "walk" ? last.pts : [last ? nodes[last.from].pos : gate.pos, gate.pos];
     for (var k = firstSeatStep; k < steps.length; k++) {
       steps[k].floor = gate.floor;
-      steps[k].points = k === firstSeatStep ? [before, gate.pos, block.pos] : [gate.pos, block.pos];
+      steps[k].points = k === firstSeatStep ? before.concat([block.pos]) : [gate.pos, block.pos];
     }
 
     var totalMeters = meters(venue, totalPx);
@@ -243,7 +272,7 @@
     };
   }
 
-  var api = { buildGraph: buildGraph, shortestPath: shortestPath, describe: describe, dist: dist };
+  var api = { buildGraph: buildGraph, shortestPath: shortestPath, describe: describe, dist: dist, edgePoints: edgePoints };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.SeatRoute = api;
 })(this);
